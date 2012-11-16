@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
         pkt->len  = strlen(fileOption) + 1;
         strcpy(pkt->payload, fileOption);
     
-        sendPacketTo(sockfd, pkt, (struct sockaddr *)sp->ai_addr);
+        sendPacketTo(sockfd, pkt, sp->ai_addr);
     
         free(pkt);
     

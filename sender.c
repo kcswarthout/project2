@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
             pkt->seq  = 0;
             pkt->len  = 0;
 
-            sendPacketTo(sockfd, pkt, (struct sockaddr *)rp->ai_addr);
+            sendPacketTo(sockfd, pkt, rp->ai_addr);
 
             free(pkt);
             break;

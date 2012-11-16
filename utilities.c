@@ -51,7 +51,7 @@ void ferrorExit(const char *msg) {
 
 unsigned long nameToAddr(char *name) {
 	struct addrinfo hints;
-    bzero(&rhints, sizeof(struct addrinfo));
+    bzero(&hints, sizeof(struct addrinfo));
     hints.ai_family   = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags    = 0;
@@ -65,9 +65,23 @@ unsigned long nameToAddr(char *name) {
 
     // Loop through all the results of getaddrinfo and try to create a socket for requester
     // NOTE: this is done so that we can find which of the getaddrinfo results is the requester
-    int requestsockfd;
+	
+	int sockfd;
+    struct addrinfo *p;
+    for(p = requesterinfo; p != NULL; p = p->ai_next) {
+        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (sockfd == -1) {
+            perror("Socket error");
+            continue;
+        }
+
+        break;
+    }
+    if (p == NULL) perrorExit("Requester lookup failed to create socket");
+    //else            printf("Requester socket created.\n\n");
+    close(sockfd); // don't need this socket
+	
     struct sockaddr_in *ip = (struct sockaddr_in *)info->ai_addr;
 	unsigned long addr = ip->sin_addr;
-	freeaddrinfo(info);
 	return addr;
 }

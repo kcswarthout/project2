@@ -13,28 +13,30 @@ enum token {EMULATOR, EMUL_PORT, DESTINATION, DEST_PORT, NEXT_HOP, NEXT_HOP_PORT
 table_entry *table = NULL;
 int size = 0;
 
-struct sockaddr_in *nextHop(ip_packet *pkt) {
-	if (table == NULL) perrorExit("No table entries");
-	if (pkt == NULL) perrorExit("nextHop function: pkt null");	
-	sockaddr_in *nextHop = malloc(sizeof(struct sockaddr_in));
-    bzero(nextHop, sizeof(struct sockaddr_in));
-	nextHop->sin_family = AF_INET;
+struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
+	if (table == NULL) printf("No table entries");
+	if (pkt == NULL) perrorExit("nextHop function: pkt null");
+	struct table_entry *nextHop = NULL;
 	int i;
 	for (i = 0; i < size; i++) {
 		if (table[i]->dest == pkt->sin_addr) {
-			if (table[i]->destPort == pkt->sin_port) P
-					nextHop->sin_addr = table[i]->nextHop;
-					nextHop->sin_port = table[i]->nextHopPort;
-					return nextHop;
+			if (table[i]->destPort == pkt->sin_port) {
+				if (socket != NULL) {
+					bzero(socket, sizeof(struct sockaddr_in));
+					socket->sin_family = AF_INET;
+					socket->sin_addr = table[i]->nextHop;
+					socket->sin_port = table[i]->nextHopPort;
+				}
+				nextHop = table[i];
+				break;
 			}
 		}
 	}
-	nextHop = NULL;
     return nextHop;
 }
 
 bool shouldForward(ip_packet *pkt) {
-	ip_packet *p = nextHop(pkt);
+	struct ip_packet *p = nextHop(pkt);
 	if (p == NULL) return false;
 	return true;
 } 
@@ -81,7 +83,7 @@ bool *parseFile(const char *filename, char *hostname, unsigned int port) {
             entry->destPort     = atoi(tokens[DEST_PORT]);
 			entry->nextHop      = strdup(tokens[NEXT_HOP]);
             entry->nextHopPort  = atoi(tokens[NEXT_HOP_PORT]);
-            entry->delay 		= atoi(tokens[DELAY]);
+            entry->delay 		= strtoul(tokens[DELAY]);
             entry->lossChance 	= atoi(tokens[LOSS_CHANCE]);
 
             // Link it in to the list of raw_entries

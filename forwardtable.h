@@ -6,7 +6,7 @@ struct table_entry {
 	unsigned int destPort;
 	unsigned long nextHop;
 	unsigned int nextHopPort;
-	unsigned int delay;
+	unsigned long delay;
 	int lossChance;
 }
 
@@ -30,7 +30,7 @@ struct raw_entry {
 bool parseFile(const char *filename, char *hostname, unsigned int port);
 
 // ----------------------------------------------------------------------------
-struct sockaddr_in *nextHop(ip_packet *pkt);
+struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket);
 
 // ----------------------------------------------------------------------------
 bool shouldForward(ip_packet *pkt);

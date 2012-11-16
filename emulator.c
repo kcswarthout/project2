@@ -72,13 +72,7 @@ int main(int argc, char **argv) {
         ferrorExit("Invalid queueLength");
     puts("");
 
-	
-	int queuePtr[3][2] = {0};
-	bool queueFull[3] = {0};
-	ipPacket* queue = malloc(3 * queueLength * (sizeof *ipPacket));
-	ipPacket* currPkt = NULL;
-	
-	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
+	srand(time(NULL));
 	
     // ------------------------------------------------------------------------
     // Setup emul address info 
@@ -122,69 +116,47 @@ int main(int argc, char **argv) {
 	parseFile(filename, sp->canonname, emulPort);
 	
 	
-    // -----------------------------===========================================
-    // REQUESTER ADDRESS INFO
-    struct addrinfo rhints;
-    bzero(&rhints, sizeof(struct addrinfo));
-    rhints.ai_family   = AF_INET;
-    rhints.ai_socktype = SOCK_DGRAM;
-    rhints.ai_flags    = 0;
-
-    struct addrinfo *requesterinfo;
-    errcode = getaddrinfo(NULL, reqPortStr, &rhints, &requesterinfo);
-    if (errcode != 0) {
-        fprintf(stderr, "requester getaddrinfo: %s\n", gai_strerror(errcode));
-        exit(EXIT_FAILURE);
-    }
-
-    // Loop through all the results of getaddrinfo and try to create a socket for requester
-    // NOTE: this is done so that we can find which of the getaddrinfo results is the requester
-    int requestsockfd;
-    struct addrinfo *rp;
-    for(rp = requesterinfo; rp != NULL; rp = rp->ai_next) {
-        requestsockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (requestsockfd == -1) {
-            perror("Socket error");
-            continue;
-        }
-
-        break;
-    }
-    if (sp == NULL) perrorExit("Requester lookup failed to create socket");
-    //else            printf("Requester socket created.\n\n");
-    close(requestsockfd); // don't need this socket
 
     // ------------------------------------------------------------------------
     puts("emul waiting for request packet...\n");
 
-    // Receive and discard packets until a REQUEST packet arrives
+	int queuePtr[3][2] = {0};
+	bool queueFull[3] = {0};
+	struct ipPacket* queue = malloc(3 * queueLength * (sizeof *ipPacket));
+	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
+	
+	struct ipPacket* currPkt = NULL;
+	struct sockaddr_in *nextHop = malloc(sizeof(struct sockaddr_in));
+	struct table_entry *currEntry = NULL;
+	
     char *filename = NULL;
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(sockfd, &fds);
-    struct timeval tv;
-	tv.tv_sec = 10000;
-	tv.tv_usec = 0;
+    struct timeval *tv;
+	tv->tv_sec = 10000;
+	tv->tv_usec = 0;
     int retval = 0;
 	int i;
+	struct ip_packet *pkt = malloc(sizeof(struct packet));
+	void *msg = malloc(sizeof(struct packet));
     for (;;) {
 		// ------------------------------------------------------------------------
 		// receiving half
-        void *msg = malloc(sizeof(struct packet));
+        
         bzero(msg, sizeof(struct packet));
 
 		retval = select(sockfd + 1, fds, NULL, NULL, tv);
-        // Receive a message
+        
 		if (retval > 0) {
+			// Receive a message
 			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct packet), 0, NULL, NULL);
 			if (bytesRecvd == -1) {
 				perror("Recvfrom error");
 				fprintf(stderr, "Failed/incomplete receive: ignoring\n");
 				continue;
 			}
-
 			// Deserialize the message into a packet 
-			struct ip_packet *pkt = malloc(sizeof(struct packet));
 			bzero(pkt, sizeof(struct packet));
 			deserializeIpPacket(msg, pkt);
 			if (shouldForward(pkt))	{
@@ -218,123 +190,49 @@ int main(int argc, char **argv) {
 			}
 			
 		}
-		for (i = 0; i < 3; i++) {
-			//if (queueFull[i]) break; 
-		}
-		if (i < 3) {
+		else if (retval == 0) {
 			// ------------------------------------------------------------------------
 			// sending half
 			if (currPkt != NULL) {
-				
+				int lossChance = currEntry->lossChance;
+				// Determine if packet should be dropped
+				if (currPkt->pkt->type == 'E') {
+					lossChance = 0;
+				}
+				if (lossChance > rand() % 100) {
+					log(currPkt, "Loss event occurred");
+				}
+				else {
+					sendIpPacketTo(sockfd, currPkt, nextHop);
+					free(currPkt);
+					currPkt = NULL;
+				}
 			}
-		
-			// Check for REQUEST packet
-			if (pkt->type == 'R') {
-				// Print some statistics for the recvd packet
-				printf("<- [Received REQUEST]: ");
-				printPacketInfo(pkt, (struct sockaddr_storage *)rp->ai_addr);
-	
-				// Grab a copy of the filename
-				filename = strdup(pkt->payload);
-	
-				// Cleanup packets
-				free(pkt);
-				free(msg);
-				break;
-			}
-		
-		
-		
 	
 		}
-		if (retval < 0) {
-		
+		else {
+			perror("Select()");
 		}
-        // Cleanup packets
-        free(pkt);
-        free(msg);
+		
+		if (currPkt == NULL) {
+			for (i = 0; i < 3; i++) {
+				if (queuePtr[i][0] != queuePtr[i][1] || queueFull[i]) {
+					currPkt = queue[i][queuePtr[i][0]];
+					queue[i][queuePtr[i][0]] = NULL;
+					queuePtr[i][0]++;
+					if (queuePtr[i][0] = queueLength) {
+						queuePtr[i][0] = 0;
+					}
+					queueFull[i] = false;
+					currEntry = nextHop(currPkt, nextHop);
+					tv->tv_sec = currEntry->delay / 1000;
+					tv->tv_usec = (currEntry->delay % 1000) * 1000;
+				}
+			}
+		}
     }
-
-    // ------------------------------------------------------------------------
-    // Got REQUEST packet, start sending DATA packets
-    // ------------------------------------------------------------------------
-
-    // Open file for reading
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) perrorExit("File open error");
-    else              printf("Opened file \"%s\" for reading.\n", filename);
-
-    unsigned long long start = getTimeMS();
-    struct packet *pkt;
-    for (;;) {
-        // Is file part finished?
-        if (feof(file) != 0) {
-            // Create END packet and send it
-            pkt = malloc(sizeof(struct packet));
-            bzero(pkt, sizeof(struct packet));
-            pkt->type = 'E';
-            pkt->seq  = 0;
-            pkt->len  = 0;
-
-            sendPacketTo(sockfd, pkt, (struct sockaddr *)rp->ai_addr);
-
-            free(pkt);
-            break;
-        }
-
-        // Send rate limiter
-        unsigned long long dt = getTimeMS() - start;
-        if (dt < 1000 / sendRate) {
-            continue; 
-        } else {
-            start = getTimeMS();
-        }
-
-        // Create DATA packet
-        pkt = malloc(sizeof(struct packet));
-        bzero(pkt, sizeof(struct packet));
-        pkt->type = 'D';
-        pkt->seq  = sequenceNum;
-        pkt->len  = payloadLen;
-
-        // Chunk the next batch of file data into this packet
-        char buf[payloadLen];
-        bzero(buf, payloadLen);
-        fread(buf, 1, payloadLen, file); // TODO: check return value
-        memcpy(pkt->payload, buf, sizeof(buf));
-
-        /*
-        printf("[Packet Details]\n------------------\n");
-        printf("type : %c\n", pkt->type);
-        printf("seq  : %lu\n", pkt->seq);
-        printf("len  : %lu\n", pkt->len);
-        printf("payload: %s\n\n", pkt->payload);
-        */
-
-        // Send the DATA packet to the requester 
-        sendPacketTo(sockfd, pkt, (struct sockaddr *)rp->ai_addr);
-
-        // Cleanup packets
-        free(pkt);
-
-        // Update sequence number for next packet
-        sequenceNum += payloadLen;
-    }
-
-    // Cleanup the file
-    if (fclose(file) != 0) fprintf(stderr, "Failed to close file \"%s\"\n", filename);
-    else                   printf("File \"%s\" closed.\n", filename);
-    free(filename);
-
-
-    // Got what we came for, shut it down
-    if (close(sockfd) == -1) perrorExit("Close error");
-    else                     puts("Connection closed.\n");
-
-    // Cleanup address info data
-    freeaddrinfo(emulinfo);
-
-    // All done!
-    exit(EXIT_SUCCESS);
+	// Cleanup packets
+    free(pkt);
+    free(msg);
 }
 

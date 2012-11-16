@@ -85,7 +85,7 @@ void deserializeIpPacket(void *msg, struct ip_packet *pkt) {
 void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr) {
     struct packet *spkt = serializePacket(pkt);
     size_t bytesSent = sendto(sockfd, spkt, PACKET_SIZE,
-                              0, addr, sizeof(struct sockaddr));
+                              0, addr, sizeof *addr);
 
     if (bytesSent == -1) {
         perror("Sendto error");
@@ -100,6 +100,17 @@ void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr) {
         printf("-> [Sent %s packet] ", typeStr);
         printPacketInfo(pkt, (struct sockaddr_storage *)addr);
     }
+}
+
+void sendIpPacketTo(int sockfd, struct ip_packet *pkt, struct sockaddr *addr) {
+    struct ip_packet *spkt = serializeIpPacket(pkt);
+    size_t bytesSent = sendto(sockfd, spkt, IP_PACKET_SIZE,
+                              0, addr, sizeof *addr);
+
+    if (bytesSent == -1) {
+        perror("Sendto error");
+        fprintf(stderr, "Error sending packet\n");
+    } 
 }
 
 void printPacketInfo(struct packet *pkt, struct sockaddr_storage *saddr) {

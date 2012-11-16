@@ -26,6 +26,8 @@ void deserializeIpPacket(void *msg, struct ip_packet *pkt);
 void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr);
 //void recvPacket(int sockfd, struct packet *pkt);
 
+void sendIpPacketTo(int sockfd, struct ip_packet *pkt, struct sockaddr *addr);
+
 void printPacketInfo(struct packet *pkt, struct sockaddr_storage *saddr);
 
 struct ip_packet {
@@ -35,8 +37,10 @@ struct ip_packet {
 	unsigned long dest;
 	unsigned int destPort;
 	unsigned long length;
-	struct packet payload;
+	struct packet *payload;
 } __attribute__((packed));
+
+#define IP_PACKET_SIZE sizeof(struct ip_packet)
 
 #endif
 

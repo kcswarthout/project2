@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -std=gnu99 -ggdb3
 
-all: requester sender
+all: requester sender emulator
 
 requester: requester.c tracker.c utilities.c packet.c
 	@echo "Building requester..."; \

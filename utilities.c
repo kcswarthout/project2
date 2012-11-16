@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
 #include <sys/time.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 
@@ -57,7 +59,7 @@ unsigned long nameToAddr(char *name) {
     hints.ai_flags    = 0;
 
     struct addrinfo *info;
-    errcode = getaddrinfo(name, NULL, &hints, &info);
+    int errcode = getaddrinfo(name, NULL, &hints, &info);
     if (errcode != 0) {
         fprintf(stderr, "Utilities getaddrinfo: %s\n", gai_strerror(errcode));
         exit(EXIT_FAILURE);
@@ -68,7 +70,7 @@ unsigned long nameToAddr(char *name) {
 	
 	int sockfd;
     struct addrinfo *p;
-    for(p = requesterinfo; p != NULL; p = p->ai_next) {
+    for(p = info; p != NULL; p = p->ai_next) {
         sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
         if (sockfd == -1) {
             perror("Socket error");
@@ -82,6 +84,6 @@ unsigned long nameToAddr(char *name) {
     close(sockfd); // don't need this socket
 	
     struct sockaddr_in *ip = (struct sockaddr_in *)info->ai_addr;
-	unsigned long addr = ip->sin_addr;
+	unsigned long addr = ip->sin_addr->s_addr;
 	return addr;
 }

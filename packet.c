@@ -27,12 +27,12 @@ void *serializePacket(struct packet *pkt) {
 }
 
 void *serializeIpPacket(struct ip_packet *p) {
-    if (pkt == NULL) {
+    if (p == NULL) {
         fprintf(stderr, "Serialize: invalid packet\n");
         return NULL;
     }
 
-	struct ip_packet *pkt = (struct ip_packet *)msg;
+	struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
 	bzero(pkt, sizeof(struct ip_packet));
     pkt->priority = p->priority;
     pkt->src  = htonl(p->src);
@@ -42,7 +42,7 @@ void *serializeIpPacket(struct ip_packet *p) {
     pkt->length  = htonl(p->length);
 	serializePacket(p->payload);
 	memcpy(pkt->payload, p->payload, sizeof(struct packet));
-    return spkt;
+    return pkt;
 }
 
 void deserializePacket(void *msg, struct packet *pkt) {

@@ -8,17 +8,17 @@ struct table_entry {
 	unsigned int nextHopPort;
 	unsigned long delay;
 	int lossChance;
-}
+};
 
 struct raw_entry {
 	char *dest;
 	unsigned int destPort;
 	char *nextHop;
-	unsigned int nextHopPort
+	unsigned int nextHopPort;
 	unsigned int delay;
 	int lossChance;
 	struct rawEntry *nextEntry;
-}
+};
 
 
 // ----------------------------------------------------------------------------

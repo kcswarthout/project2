@@ -15,21 +15,6 @@ struct packet {
     char payload[MAX_PAYLOAD];
 } __attribute__((packed));
 
-#define PACKET_SIZE sizeof(struct packet)
-
-void *serializePacket(struct packet *pkt);
-void deserializePacket(void *msg, struct packet *pkt);
-
-void *serializeIpPacket(struct ip_packet *pkt);
-void deserializeIpPacket(void *msg, struct ip_packet *pkt);
-
-void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr);
-//void recvPacket(int sockfd, struct packet *pkt);
-
-void sendIpPacketTo(int sockfd, struct ip_packet *pkt, struct sockaddr *addr);
-
-void printPacketInfo(struct packet *pkt, struct sockaddr_storage *saddr);
-
 struct ip_packet {
 	unsigned char priority;
 	unsigned long src;
@@ -41,6 +26,21 @@ struct ip_packet {
 } __attribute__((packed));
 
 #define IP_PACKET_SIZE sizeof(struct ip_packet)
+
+#define PACKET_SIZE sizeof(struct packet)
+
+void *serializePacket(struct packet *pkt);
+void deserializePacket(void *msg, struct packet *pkt);
+
+void *serializeIpPacket(struct ip_packet *p);
+void deserializeIpPacket(void *msg, struct ip_packet *pkt);
+
+void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr);
+//void recvPacket(int sockfd, struct packet *pkt);
+
+void sendIpPacketTo(int sockfd, struct ip_packet *pkt, struct sockaddr *addr);
+
+void printPacketInfo(struct packet *pkt, struct sockaddr_storage *saddr);
 
 #endif
 

@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 
 #include "utilities.h"
@@ -84,6 +85,6 @@ unsigned long nameToAddr(char *name) {
     close(sockfd); // don't need this socket
 	
     struct sockaddr_in *ip = (struct sockaddr_in *)info->ai_addr;
-	unsigned long addr = ip->sin_addr->s_addr;
+	unsigned long addr = ip->sin_addr.s_addr;
 	return addr;
 }

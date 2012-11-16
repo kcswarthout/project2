@@ -26,6 +26,25 @@ void *serializePacket(struct packet *pkt) {
     return spkt;
 }
 
+void *serializeIpPacket(struct ip_packet *p) {
+    if (pkt == NULL) {
+        fprintf(stderr, "Serialize: invalid packet\n");
+        return NULL;
+    }
+
+	struct ip_packet *pkt = (struct ip_packet *)msg;
+	bzero(pkt, sizeof(struct ip_packet));
+    pkt->priority = p->priority;
+    pkt->src  = htonl(p->src);
+	pkt->srcPort  = htons(p->srcPort);
+	pkt->dest  = htonl(p->dest);
+	pkt->destPort  = htons(p->destPort);
+    pkt->length  = htonl(p->length);
+	serializePacket(p->payload);
+	memcpy(pkt->payload, p->payload, sizeof(struct packet));
+    return spkt;
+}
+
 void deserializePacket(void *msg, struct packet *pkt) {
     if (msg == NULL) {
         fprintf(stderr, "Deserialize: invalid message\n");
@@ -41,6 +60,26 @@ void deserializePacket(void *msg, struct packet *pkt) {
     pkt->seq  = ntohl(p->seq);
     pkt->len  = ntohl(p->len);
     memcpy(pkt->payload, p->payload, MAX_PAYLOAD);
+}
+
+void deserializeIpPacket(void *msg, struct ip_packet *pkt) {
+    if (msg == NULL) {
+        fprintf(stderr, "Deserialize: invalid message\n");
+        return;
+    }
+    if (pkt == NULL) {
+        fprintf(stderr, "Deserialize: invalid packet\n");
+        return;
+    }
+
+    struct ip_packet *p = (struct ip_packet *)msg;
+    pkt->priority = p->priority;
+    pkt->src  = ntohl(p->src);
+	pkt->srcPort  = ntohs(p->srcPort);
+	pkt->dest  = ntohl(p->dest);
+	pkt->destPort  = ntohs(p->destPort);
+    pkt->length  = ntohl(p->length);
+	deserializePacket(p->payload, pkt->payload);
 }
 
 void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr) {

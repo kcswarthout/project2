@@ -49,3 +49,25 @@ void ferrorExit(const char *msg) {
     exit(EXIT_FAILURE);
 }
 
+unsigned long nameToAddr(char *name) {
+	struct addrinfo hints;
+    bzero(&rhints, sizeof(struct addrinfo));
+    hints.ai_family   = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags    = 0;
+
+    struct addrinfo *info;
+    errcode = getaddrinfo(name, NULL, &hints, &info);
+    if (errcode != 0) {
+        fprintf(stderr, "Utilities getaddrinfo: %s\n", gai_strerror(errcode));
+        exit(EXIT_FAILURE);
+    }
+
+    // Loop through all the results of getaddrinfo and try to create a socket for requester
+    // NOTE: this is done so that we can find which of the getaddrinfo results is the requester
+    int requestsockfd;
+    struct sockaddr_in *ip = (struct sockaddr_in *)info->ai_addr;
+	unsigned long addr = ip->sin_addr;
+	freeaddrinfo(info);
+	return addr;
+}

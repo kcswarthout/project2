@@ -13,6 +13,11 @@ sender: sender.c utilities.c packet.c
 	$(CC) $(CFLAGS) -o $@ $^;   \
 	echo "  [complete]"
 
+emulator: emulator.c utilities.c packet.c forwardtable.c
+	@echo "Building emulator..."; \
+	$(CC) $(CFLAGS) -o $@ $^;   \
+	echo "  [complete]"
+	
 clean:
-	rm -rf *.o requester sender
+	rm -rf *.o requester sender emulator
 

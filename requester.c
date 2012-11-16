@@ -17,6 +17,7 @@
 #include "utilities.h"
 #include "tracker.h"
 #include "packet.h"
+#include "forwardtable.h"
 
 
 int main(int argc, char **argv) {

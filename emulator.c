@@ -72,13 +72,21 @@ int main(int argc, char **argv) {
         ferrorExit("Invalid queueLength");
     puts("");
 
+	
+	int queuePtr[3][2] = {0};
+	bool queueFull[3] = {0};
+	ipPacket* queue = malloc(3 * queueLength * (sizeof *ipPacket));
+	ipPacket* currPkt = NULL;
+	
+	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
+	
     // ------------------------------------------------------------------------
     // Setup emul address info 
     struct addrinfo ehints;
     bzero(&ehints, sizeof(struct addrinfo));
-    shints.ai_family   = AF_INET;
-    shints.ai_socktype = SOCK_DGRAM;
-    shints.ai_flags    = AI_PASSIVE;
+    ehints.ai_family   = AF_INET;
+    ehints.ai_socktype = SOCK_DGRAM;
+    ehints.ai_flags    = AI_PASSIVE;
 
     // Get the emul's address info
     struct addrinfo *emulinfo;
@@ -111,6 +119,9 @@ int main(int argc, char **argv) {
     if (sp == NULL) perrorExit("Send socket creation failed");
     else            printf("emul socket created.\n");
 
+	parseFile(filename, sp->canonname, emulPort);
+	
+	
     // -----------------------------===========================================
     // REQUESTER ADDRESS INFO
     struct addrinfo rhints;
@@ -148,39 +159,97 @@ int main(int argc, char **argv) {
 
     // Receive and discard packets until a REQUEST packet arrives
     char *filename = NULL;
+	fd_set fds;
+	FD_ZERO(&fds);
+	FD_SET(sockfd, &fds);
+    struct timeval tv;
+	tv.tv_sec = 10000;
+	tv.tv_usec = 0;
+    int retval = 0;
+	int i;
     for (;;) {
+		// ------------------------------------------------------------------------
+		// receiving half
         void *msg = malloc(sizeof(struct packet));
         bzero(msg, sizeof(struct packet));
 
+		retval = select(sockfd + 1, fds, NULL, NULL, tv);
         // Receive a message
-        size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct packet), 0,
-            (struct sockaddr *)rp->ai_addr, &rp->ai_addrlen);
-        if (bytesRecvd == -1) {
-            perror("Recvfrom error");
-            fprintf(stderr, "Failed/incomplete receive: ignoring\n");
-            continue;
-        }
+		if (retval > 0) {
+			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct packet), 0, NULL, NULL);
+			if (bytesRecvd == -1) {
+				perror("Recvfrom error");
+				fprintf(stderr, "Failed/incomplete receive: ignoring\n");
+				continue;
+			}
 
-        // Deserialize the message into a packet 
-        struct packet *pkt = malloc(sizeof(struct packet));
-        bzero(pkt, sizeof(struct packet));
-        deserializePacket(msg, pkt);
-
-        // Check for REQUEST packet
-        if (pkt->type == 'R') {
-            // Print some statistics for the recvd packet
-            printf("<- [Received REQUEST]: ");
-            printPacketInfo(pkt, (struct sockaddr_storage *)rp->ai_addr);
-
-            // Grab a copy of the filename
-            filename = strdup(pkt->payload);
-
-            // Cleanup packets
-            free(pkt);
-            free(msg);
-            break;
-        }
-
+			// Deserialize the message into a packet 
+			struct ip_packet *pkt = malloc(sizeof(struct packet));
+			bzero(pkt, sizeof(struct packet));
+			deserializeIpPacket(msg, pkt);
+			if (shouldForward(pkt))	{
+				for (i = 0; i < 3; i++) {
+					if (pkt->priority == priority[i]) {
+						if (queueFull[i]) {
+							char tmpStr[30] = {'\0'};
+							sprintf(tmpStr, "Priority queue %d full", i);
+							log(pkt, tmpStr);
+						}
+						else {
+							queue[i][queuePtr[i][1]] = pkt;
+							queuePtr[i][1]++;
+							if (queuePtr[i][1] == queueLength) {
+								queuePtr[i][1] = 0;
+							}
+							if (queuePtr[i][1] == queuePtr[i][0]) {
+								queueFull[i] = true;
+							}
+						}
+						break;
+					}
+				}
+				if (i == 3) {
+					perror("Invalid packet priority value");
+					log(pkt, "Invalid packet priority value");
+				}
+			}
+			else {
+				log(pkt, "No forwarding entry found");
+			}
+			
+		}
+		for (i = 0; i < 3; i++) {
+			//if (queueFull[i]) break; 
+		}
+		if (i < 3) {
+			// ------------------------------------------------------------------------
+			// sending half
+			if (currPkt != NULL) {
+				
+			}
+		
+			// Check for REQUEST packet
+			if (pkt->type == 'R') {
+				// Print some statistics for the recvd packet
+				printf("<- [Received REQUEST]: ");
+				printPacketInfo(pkt, (struct sockaddr_storage *)rp->ai_addr);
+	
+				// Grab a copy of the filename
+				filename = strdup(pkt->payload);
+	
+				// Cleanup packets
+				free(pkt);
+				free(msg);
+				break;
+			}
+		
+		
+		
+	
+		}
+		if (retval < 0) {
+		
+		}
         // Cleanup packets
         free(pkt);
         free(msg);

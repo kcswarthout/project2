@@ -25,5 +25,10 @@ void perrorExit(const char *msg);
 // ----------------------------------------------------------------------------
 void ferrorExit(const char *msg);
 
+// ----------------------------------------------------------------------------
+// Get ip address of the given host name
+// ----------------------------------------------------------------------------
+unsigned long nameToAddr(char *name);
+
 #endif
 

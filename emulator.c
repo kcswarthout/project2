@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(sockfd, &fds);
-    struct timeval *tv;
+    struct timeval *tv = malloc(sizeof(struct tv));
 	tv->tv_sec = 10000;
 	tv->tv_usec = 0;
     int retval = 0;

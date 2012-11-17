@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
 	int queuePtr[3][2] = {{0}};
 	int queueFull[3] = {0};
-	struct ip_packet *queue = malloc(3 * queueLength * (sizeof *ip_packet));
+	struct ip_packet *queue = malloc(3 * queueLength * (sizeof ip_packet));
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
 	struct ip_packet *currPkt = NULL;
@@ -139,26 +139,26 @@ int main(int argc, char **argv) {
 	tv->tv_usec = 0;
     int retval = 0;
 	int i;
-	struct ip_packet *pkt = malloc(sizeof(struct packet));
-	void *msg = malloc(sizeof(struct packet));
+	struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
+	void *msg = malloc(sizeof(struct ip_packet));
     for (;;) {
 		// ------------------------------------------------------------------------
 		// receiving half
         
-        bzero(msg, sizeof(struct packet));
+        bzero(msg, sizeof(struct ip_packet));
 
 		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
         
 		if (retval > 0) {
 			// Receive a message
-			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct packet), 0, NULL, NULL);
+			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, NULL, NULL);
 			if (bytesRecvd == -1) {
 				perror("Recvfrom error");
 				fprintf(stderr, "Failed/incomplete receive: ignoring\n");
 				continue;
 			}
 			// Deserialize the message into a packet 
-			bzero(pkt, sizeof(struct packet));
+			bzero(pkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, pkt);
 			if (shouldForward(pkt))	{
 				for (i = 0; i < 3; i++) {
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 							log(pkt, tmpStr);
 						}
 						else {
-							queue[i][queuePtr[i][1]] = pkt;
+							memcpy(queue[i][queuePtr[i][1]], pkt, sizeof(struct ip_packet));
 							queuePtr[i][1]++;
 							if (queuePtr[i][1] == queueLength) {
 								queuePtr[i][1] = 0;
@@ -219,7 +219,6 @@ int main(int argc, char **argv) {
 			for (i = 0; i < 3; i++) {
 				if (queuePtr[i][0] != queuePtr[i][1] || queueFull[i]) {
 					currPkt = &queue[i][(queuePtr[i][0])];
-					&queue[i][(queuePtr[i][0])] = NULL;
 					queuePtr[i][0]++;
 					if (queuePtr[i][0] == queueLength) {
 						queuePtr[i][0] = 0;

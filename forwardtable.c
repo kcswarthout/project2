@@ -50,7 +50,7 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 }
 
 int shouldForward(struct ip_packet *pkt) {
-	struct ip_packet *p = nextHop(pkt, NULL);
+	struct table_entry *p = nextHop(pkt, NULL);
 	if (p == NULL) return 0;
 	return 1;
 } 

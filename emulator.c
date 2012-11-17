@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
 	int queuePtr[3][2] = {{0}};
 	int queueFull[3] = {0};
-	struct ip_packet *queue[3][queueLength] = {{NULL}};
+	struct ip_packet **queue[3][queueLength] = malloc(3 * queueLength * (sizeof (structip_packet)));
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
 	struct ip_packet *currPkt = NULL;

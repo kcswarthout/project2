@@ -36,7 +36,7 @@ int parseFile(const char *filename, char *hostname, unsigned int port);
 struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket);
 
 // ----------------------------------------------------------------------------
-int shouldForward(ip_packet *pkt);
+int shouldForward(struct ip_packet *pkt);
 
 // ----------------------------------------------------------------------------
 

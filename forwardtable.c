@@ -49,7 +49,7 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
     return nextEntry;
 }
 
-int shouldForward(ip_packet *pkt) {
+int shouldForward(struct ip_packet *pkt) {
 	struct ip_packet *p = nextHop(pkt);
 	if (p == NULL) return 0;
 	return 1;
@@ -90,8 +90,8 @@ int parseFile(const char *filename, char *hostname, unsigned int port) {
 
         // Only process this line if it is for the specified emulator
         if (strcmp(tokens[EMULATOR], hostname) == 0 && atoi(tokens[EMUL_PORT]) == port) {
-            struct raw_entry *entry = malloc(sizeof(struct file_entry));
-            bzero(entry, sizeof(struct file_entry));
+            struct raw_entry *entry = malloc(sizeof(struct raw_entry));
+            bzero(entry, sizeof(struct raw_entry));
 			// TODO: type conversions likr atol or strtoul instead of atoi
             entry->dest         = strdup(tokens[DESTINATION]);
             entry->destPort     = atoi(tokens[DEST_PORT]);

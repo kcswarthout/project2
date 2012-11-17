@@ -124,10 +124,10 @@ int main(int argc, char **argv) {
 
 	int queuePtr[3][2] = {{0}};
 	int queueFull[3] = {0};
-	struct ip_packet* queue = malloc(3 * queueLength * (sizeof *ip_packet));
+	struct ip_packet *queue = malloc(3 * queueLength * (sizeof *ip_packet));
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
-	struct ip_packet* currPkt = NULL;
+	struct ip_packet *currPkt = NULL;
 	struct sockaddr_in *nextSock = malloc(sizeof(struct sockaddr_in));
 	struct table_entry *currEntry = NULL;
 	

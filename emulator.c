@@ -125,6 +125,10 @@ int main(int argc, char **argv) {
 	int queuePtr[3][2] = {{0}};
 	int queueFull[3] = {0};
 	struct ip_packet **queue = malloc(3 * queueLength * (sizeof (void *)));
+	struct end_packet_list *ePktList[3] = {malloc(sizeof(struct end_packet_list)), 
+			malloc(sizeof(struct end_packet_list)), malloc(sizeof(struct end_packet_list))};
+	struct end_packet_list *ePktTail[3] = {&ePktList[0], &ePktList[1], &ePktList[2]};
+	
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
 	struct ip_packet *currPkt = NULL;
@@ -165,9 +169,16 @@ int main(int argc, char **argv) {
 				for (i = 0; i < 3; i++) {
 					if (pkt->priority == priority[i]) {
 						if (queueFull[i]) {
-							char tmpStr[30] = {'\0'};
-							sprintf(tmpStr, "Priority queue %d full", i);
-							logP(pkt, tmpStr);
+							if (pkt->payload->type == 'E') {
+								ePktTail[i]->pkt = pkt;
+								ePktTail[i]->nextPkt = malloc(sizeof(struct end_packet_list));
+								ePktTail[i] = ePktTail[i]->nextPkt;
+							}
+							else {
+								char tmpStr[30] = {'\0'};
+								sprintf(tmpStr, "Priority queue %d full", i);
+								logP(pkt, tmpStr);
+							}
 						}
 						else {
 							queue[(i*queueLength) + queuePtr[i][1]] = pkt;
@@ -205,6 +216,7 @@ int main(int argc, char **argv) {
 					logP(currPkt, "Loss event occurred");
 				}
 				else {
+					currPkt = serializeIpPacket(currPkt);
 					sendIpPacketTo(sockfd, currPkt, (struct sockaddr*)nextSock);
 					free(currPkt);
 					currPkt = NULL;
@@ -226,6 +238,17 @@ int main(int argc, char **argv) {
 						queuePtr[i][0] = 0;
 					}
 					queueFull[i] = 0;
+					if (ePktList[i]->pkt != null) {
+						queue[(i*queueLength) + queuePtr[i][1]] = ePktList[i]->pkt;
+						queuePtr[i][1]++;
+						if (queuePtr[i][1] == queueLength) {
+							queuePtr[i][1] = 0;
+						}
+						if (queuePtr[i][1] == queuePtr[i][0]) {
+							queueFull[i] = 1;
+						}
+						ePktList[i] = ePktList[i]->nextPkt;
+					}
 					currEntry = nextHop(currPkt, nextSock);
 					tv->tv_sec = currEntry->delay / 1000;
 					tv->tv_usec = (currEntry->delay % 1000) * 1000;

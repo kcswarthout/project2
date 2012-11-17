@@ -23,6 +23,10 @@ struct raw_entry {
 	struct raw_entry *nextEntry;
 };
 
+struct end_packet_list {
+	struct ip_packet *pkt;
+	struct end_packet_list *nextPkt;
+}
 
 // ----------------------------------------------------------------------------
 // Parse the forwarding table file.

@@ -28,15 +28,21 @@ int main(int argc, char **argv) {
     }
 
     char *portStr    = NULL;
+    char *fHostName  = NULL;
+    char *fPortStr   = NULL;
     char *fileOption = NULL;
+    char *windowStr  = NULL;
 
     int cmd;
-    while ((cmd = getopt(argc, argv, "p:o:")) != -1) {
+    while ((cmd = getopt(argc, argv, "p:f:h:o:w:")) != -1) {
         switch(cmd) {
             case 'p': portStr    = optarg; break;
+            case 'f': fHostName  = optarg; break;
+            case 'h': fPortStr   = optarg; break;
             case 'o': fileOption = optarg; break;
+            case 'w': windowStr  = optarg; break;
             case '?':
-                if (optopt == 'p' || optopt == 'o')
+                if (optopt == 'p' || optopt == 'f' || optopt == 'h' || optopt == 'o' || optopt == 'w')
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 else if (isprint(optopt))
                     fprintf(stderr, "Unknown option -%c.\n", optopt);
@@ -56,6 +62,8 @@ int main(int argc, char **argv) {
 
     // Convert program args to values
     int requesterPort = atoi(portStr);
+    int emulPort = atoi(fPortStr);
+    int window = atoi(windowStr);
 
     // Validate the argument values
     if (requesterPort <= 1024 || requesterPort >= 65536)
@@ -105,7 +113,49 @@ int main(int argc, char **argv) {
     }
     if (rp == NULL) perrorExit("Request socket creation failed");
     else            { printf("Requester socket: "); printNameInfo(rp); }
+	
+	struct sockaddr_in *tmp = (struct sockaddr_in *)rp->ai_addr;
+	unsigned long rIpAddr = tmp->sin_addr.s_addr;
 
+	// ------------------------------------------------------------------------
+    // Setup emul address info 
+    struct addrinfo ehints;
+    bzero(&ehints, sizeof(struct addrinfo));
+    ehints.ai_family   = AF_INET;
+    ehints.ai_socktype = SOCK_DGRAM;
+    ehints.ai_flags    = 0;
+
+    // Get the emul's address info
+    struct addrinfo *emulinfo;
+    errcode = getaddrinfo(fHostName, fPortStr, &ehints, &emulinfo);
+    if (errcode != 0) {
+        fprintf(stderr, "emul getaddrinfo: %s\n", gai_strerror(errcode));
+        exit(EXIT_FAILURE);
+    }
+
+    // Loop through all the results of getaddrinfo and try to create a socket for emul
+    int esockfd;
+    struct addrinfo *esp;
+    for(esp = emulinfo; esp != NULL; esp = esp->ai_next) {
+        // Try to create a new socket
+        sockfd = socket(esp->ai_family, esp->ai_socktype, esp->ai_protocol);
+        if (sockfd == -1) {
+            perror("Socket error");
+            continue;
+        }
+
+        // Try to bind the socket
+        if (bind(sockfd, esp->ai_addr, esp->ai_addrlen) == -1) {
+            perror("Bind error");
+            close(sockfd);
+            continue;
+        }
+
+        break;
+    }
+    if (esp == NULL) perrorExit("Send socket creation failed");
+    else            printf("emul socket created.\n");
+	
     // ------------------------------------------------------------------------
     // Sender hints TODO: move into part loop
     struct addrinfo shints;
@@ -117,6 +167,7 @@ int main(int argc, char **argv) {
     FILE *file = fopen("recvd.txt", "at");
     if (file == NULL) perrorExit("File open error");
     
+	unsigned long sIpAddr;
     struct file_part *part = fileParts->parts;
     while (part != NULL) {
         // Convert the sender's port # to a string
@@ -147,7 +198,10 @@ int main(int argc, char **argv) {
         if (sp == NULL) perrorExit("Send socket creation failed");
         //else            printf("Sender socket created.\n\n");
         close(sendsockfd); // don't need this socket
-    
+		
+		tmp = (struct sockaddr_in *)sp->ai_addr;
+		sIpAddr = tmp->sin_addr.s_addr;
+		
         // ------------------------------------------------------------------------
     
         // Setup variables for statistics
@@ -157,14 +211,21 @@ int main(int argc, char **argv) {
     
         // ------------------------------------------------------------------------
         // Construct a REQUEST packet
-        struct packet *pkt = NULL;
-        pkt = malloc(sizeof(struct packet));
-        bzero(pkt, sizeof(struct packet));
-        pkt->type = 'R';
-        pkt->seq  = 0;
-        pkt->len  = strlen(fileOption) + 1;
-        strcpy(pkt->payload, fileOption);
+		struct ip_packet *pkt = NULL;
+        pkt = malloc(sizeof(struct ip_packet));
+        bzero(pkt, sizeof(struct ip_packet));
+        pkt->payload->type = 'R';
+        pkt->payload->seq  = 0;
+        pkt->payload->len  = window;
+        strcpy(pkt->payload->payload, fileOption);
+		pkt->src = rIpAddr;
+		pkt->srcPort = requesterPort;
+		pkt->dest = sIpAddr;
+		pkt->destPort = part->sender_port;
+		pkt->priority = HIGH_PRIORITY;
+		pkt->length = HEADER_SIZE + strlen(fileOption) + 1;
     
+		pkt = serializeIpPacket(pkt);
         sendPacketTo(sockfd, pkt, sp->ai_addr);
     
         free(pkt);
@@ -184,10 +245,11 @@ int main(int argc, char **argv) {
         struct sockaddr_storage senderAddr;
         bzero(&senderAddr, sizeof(struct sockaddr_storage));
         socklen_t len = sizeof(senderAddr);
-    
+		
+		struct ip_packet *rpkt;
         // Start a recv loop here to get all packets for the given part
         for (;;) {
-            void *msg = malloc(sizeof(struct packet));
+            void *msg = malloc(sizeof(struct ip_packet));
             bzero(msg, sizeof(struct packet));
     
             // Receive a message 
@@ -196,15 +258,19 @@ int main(int argc, char **argv) {
             if (bytesRecvd == -1) perrorExit("Receive error");
     
             // Deserialize the message into a packet
-            pkt = malloc(sizeof(struct packet));
-            bzero(pkt, sizeof(struct packet));
-            deserializePacket(msg, pkt);
-    
+            rpkt = malloc(sizeof(struct ip_packet));
+            bzero(rpkt, sizeof(struct ip_packet));
+            deserializeIpPacket(msg, rpkt);
+			
+			if (rpkt->dest != rIpAddr || rpkt->destPort != requesterPort) {
+				continue;
+			}
+			
             // Handle DATA packet
-            if (pkt->type == 'D') {
+            if (rpkt->payload->type == 'D') {
                 // Update statistics
                 ++numPacketsRecvd;
-                numBytesRecvd += pkt->len;
+                numBytesRecvd += rpkt->payload->len;
 
                 /* FOR DEBUG
                 printf("[Packet Details]\n------------------\n");
@@ -215,22 +281,22 @@ int main(int argc, char **argv) {
                 */
     
                 // Print details about the received packet
-                printf("<- [Received DATA packet] ");
-                printPacketInfo(pkt, (struct sockaddr_storage *)&senderAddr);
+                //printf("<- [Received DATA packet] ");
+                //printPacketInfo(rpkt->payload, (struct sockaddr_storage *)&senderAddr);
     
                 // Save the data so the file can be reassembled later
-                size_t bytesWritten = fprintf(file, "%s", pkt->payload);
-                if (bytesWritten != pkt->len) {
+                size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
+                if (bytesWritten != rpkt->payload->len) {
                     fprintf(stderr,
                         "Incomplete file write: %d bytes written, %lu pkt len",
-                        (int)bytesWritten, pkt->len);
+                        (int)bytesWritten, rpkt->payload->len);
                 } else {
                     fflush(file);
                 }
             }
     
             // Handle END packet
-            if (pkt->type == 'E') {
+            if (rpkt->payload->type == 'E') {
                 printf("<- *** [Received END packet] ***");
                 double dt = difftime(time(NULL), startTime);
                 if (dt <= 1) dt = 1;
@@ -244,10 +310,24 @@ int main(int argc, char **argv) {
     
                 break;
             }
+			pkt = malloc(sizeof(struct ip_packet));
+			bzero(pkt, sizeof(struct ip_packet));
+			pkt->payload->type = 'A';
+			pkt->payload->seq  = rpkt->payload->seq;
+			pkt->payload->len  = window;
+			pkt->src = rIpAddr;
+			pkt->srcPort = requesterPort;
+			pkt->dest = rpkt->src;
+			pkt->destPort = rpkt->srcPort;
+			pkt->priority = HIGH_PRIORITY;
+			pkt->length = HEADER_SIZE + 1;
     
+			pkt = serializeIpPacket(pkt);
+			sendPacketTo(sockfd, pkt, sp->ai_addr);
         }
         part = part->next_part;
         free(pkt);
+		free(rpkt);
         freeaddrinfo(senderinfo);
     }
 

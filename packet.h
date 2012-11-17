@@ -26,8 +26,9 @@ struct ip_packet {
 } __attribute__((packed));
 
 #define IP_PACKET_SIZE sizeof(struct ip_packet)
-
 #define PACKET_SIZE sizeof(struct packet)
+#define HEADER_SIZE ((2 * sizeof(long)) + sizeof(char))
+#define IP_HEADER_SIZE ((3 * sizeof(long)) + (2 * sizeof(int)) + sizeof(char))
 
 void *serializePacket(struct packet *pkt);
 void deserializePacket(void *msg, struct packet *pkt);

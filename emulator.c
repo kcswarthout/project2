@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
 	int queuePtr[3][2] = {{0}};
 	int queueFull[3] = {0};
-	struct ip_packet **queue[3][queueLength] = malloc(3 * queueLength * (sizeof (structip_packet)));
+	struct ip_packet **queue = malloc(3 * queueLength * (sizeof (struct *ip_packet)));
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
 	struct ip_packet *currPkt = NULL;
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
 					log(currPkt, "Loss event occurred");
 				}
 				else {
-					sendIpPacketTo(sockfd, currPkt, nextSock);
+					sendIpPacketTo(sockfd, currPkt, (struct sockaddr*)nextSock);
 					free(currPkt);
 					currPkt = NULL;
 				}

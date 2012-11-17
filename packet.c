@@ -102,7 +102,7 @@ void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr) {
     }
 }
 
-void sendIpPacketTo(int sockfd, struct ip_packet *pkt, struct sockaddr_in *addr) {
+void sendIpPacketTo(int sockfd, struct ip_packet *pkt, struct sockaddr *addr) {
     struct ip_packet *spkt = serializeIpPacket(pkt);
     size_t bytesSent = sendto(sockfd, spkt, IP_PACKET_SIZE,
                               0, addr, sizeof *addr);

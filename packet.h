@@ -30,6 +30,8 @@ struct ip_packet {
 #define HEADER_SIZE ((2 * sizeof(long)) + sizeof(char))
 #define IP_HEADER_SIZE ((3 * sizeof(long)) + (2 * sizeof(int)) + sizeof(char))
 
+unsigned char priorityBin(int prior);
+
 void *serializePacket(struct packet *pkt);
 void deserializePacket(void *msg, struct packet *pkt);
 

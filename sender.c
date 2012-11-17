@@ -32,18 +32,26 @@ int main(int argc, char **argv) {
     char *rateStr    = NULL;
     char *seqNumStr  = NULL;
     char *lenStr     = NULL;
+    char *fHostName  = NULL;
+    char *fPortStr   = NULL;
+    char *priorStr   = NULL;
+    char *timeoutStr = NULL;
 
     int cmd;
-    while ((cmd = getopt(argc, argv, "p:g:r:q:l:")) != -1) {
+    while ((cmd = getopt(argc, argv, "p:g:r:q:l:f:h:i:t:")) != -1) {
         switch(cmd) {
             case 'p': portStr    = optarg; break;
             case 'g': reqPortStr = optarg; break;
             case 'r': rateStr    = optarg; break;
             case 'q': seqNumStr  = optarg; break;
             case 'l': lenStr     = optarg; break;
+            case 'f': fHostName  = optarg; break;
+            case 'h': fPortStr   = optarg; break;
+            case 'i': priorStr   = optarg; break;
+            case 't': timeoutStr = optarg; break;
             case '?':
-                if (optopt == 'p' || optopt == 'g' || optopt == 'r'
-                 || optopt == 'q' || optopt == 'l')
+                if (optopt == 'p' || optopt == 'g' || optopt == 'r' || optopt == 'q' || optopt == 'l' 
+								  || optopt == 'f' || optopt == 'h' || optopt == 'i' || optopt == 't')
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 else if (isprint(optopt))
                     fprintf(stderr, "Unknown option -%c.\n", optopt);
@@ -64,12 +72,17 @@ int main(int argc, char **argv) {
     printf("Length         : %s\n", lenStr);
 
     // Convert program args to values
-    int senderPort    = atoi(portStr);
-    int requesterPort = atoi(reqPortStr);
-    int sequenceNum   = atoi(seqNumStr);
-    int payloadLen    = atoi(lenStr);
-    unsigned sendRate = (unsigned) atoi(rateStr);
+    int senderPort    		= atoi(portStr);
+    int requesterPort 		= atoi(reqPortStr);
+    int emulPort      		= atoi(fPortStr);
+    int sequenceNum			= atoi(seqNumStr);
+    int payloadLen    		= atoi(lenStr);
+    unsigned sendRate 		= (unsigned) atoi(rateStr);
+	unsigned char priority 	= priorityBin(atoi(priorStr));
+	unsigned int timeout    = (unsigned) atoi(timeoutStr);	
 
+	sequenceNum = 1;
+	
     // Validate the argument values
     if (senderPort <= 1024 || senderPort >= 65536)
         ferrorExit("Invalid sender port");
@@ -118,6 +131,46 @@ int main(int argc, char **argv) {
     if (sp == NULL) perrorExit("Send socket creation failed");
     else            printf("Sender socket created.\n");
 
+	// ------------------------------------------------------------------------
+    // Setup emul address info 
+    struct addrinfo ehints;
+    bzero(&ehints, sizeof(struct addrinfo));
+    ehints.ai_family   = AF_INET;
+    ehints.ai_socktype = SOCK_DGRAM;
+    ehints.ai_flags    = 0;
+
+    // Get the emul's address info
+    struct addrinfo *emulinfo;
+    errcode = getaddrinfo(fHostName, fPortStr, &ehints, &emulinfo);
+    if (errcode != 0) {
+        fprintf(stderr, "emul getaddrinfo: %s\n", gai_strerror(errcode));
+        exit(EXIT_FAILURE);
+    }
+
+    // Loop through all the results of getaddrinfo and try to create a socket for emul
+    int esockfd;
+    struct addrinfo *esp;
+    for(esp = emulinfo; esp != NULL; esp = esp->ai_next) {
+        // Try to create a new socket
+        sockfd = socket(esp->ai_family, esp->ai_socktype, esp->ai_protocol);
+        if (sockfd == -1) {
+            perror("Socket error");
+            continue;
+        }
+
+        // Try to bind the socket
+        if (bind(sockfd, esp->ai_addr, esp->ai_addrlen) == -1) {
+            perror("Bind error");
+            close(sockfd);
+            continue;
+        }
+
+        break;
+    }
+    if (esp == NULL) perrorExit("Send socket creation failed");
+    else            printf("emul socket created.\n");
+	
+	
     // -----------------------------===========================================
     // REQUESTER ADDRESS INFO
     struct addrinfo rhints;
@@ -154,34 +207,35 @@ int main(int argc, char **argv) {
     puts("Sender waiting for request packet...\n");
 
     // Receive and discard packets until a REQUEST packet arrives
+	unsigned long window;
     char *filename = NULL;
     for (;;) {
-        void *msg = malloc(sizeof(struct packet));
-        bzero(msg, sizeof(struct packet));
+        void *msg = malloc(sizeof(struct ip_packet));
+        bzero(msg, sizeof(struct ip_packet));
 
         // Receive a message
-        size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct packet), 0,
-            (struct sockaddr *)rp->ai_addr, &rp->ai_addrlen);
+        size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
+            (struct sockaddr *)esp->ai_addr, &esp->ai_addrlen);
         if (bytesRecvd == -1) {
             perror("Recvfrom error");
             fprintf(stderr, "Failed/incomplete receive: ignoring\n");
             continue;
         }
 
-        // Deserialize the message into a packet 
-        struct packet *pkt = malloc(sizeof(struct packet));
-        bzero(pkt, sizeof(struct packet));
-        deserializePacket(msg, pkt);
+        // Deserialize the message into a ip_packet 
+        struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
+        bzero(pkt, sizeof(struct ip_packet));
+        deserializeIpPacket(msg, pkt);
 
         // Check for REQUEST packet
-        if (pkt->type == 'R') {
+        if (pkt->payload->type == 'R') {
             // Print some statistics for the recvd packet
             printf("<- [Received REQUEST]: ");
-            printPacketInfo(pkt, (struct sockaddr_storage *)rp->ai_addr);
+            printPacketInfo(pkt->payload, (struct sockaddr_storage *)esp->ai_addr);
 
             // Grab a copy of the filename
-            filename = strdup(pkt->payload);
-
+            filename = strdup(pkt->payload->payload);
+			window = pkt->payload->len;
             // Cleanup packets
             free(pkt);
             free(msg);
@@ -202,19 +256,24 @@ int main(int argc, char **argv) {
     if (file == NULL) perrorExit("File open error");
     else              printf("Opened file \"%s\" for reading.\n", filename);
 
+	int windowStart = 1;
+	struct packet **buffer = malloc(window * (sizeof (void *)));
+	unsigned int *bufferTimer = malloc(window * (sizeof (int)));
     unsigned long long start = getTimeMS();
-    struct packet *pkt;
+	unsigned long long timeoutEnd;
+    struct ip_packet *pkt;
     for (;;) {
+		
+        pkt = malloc(sizeof(struct ip_packet));
+        bzero(pkt, sizeof(struct ip_packet));
         // Is file part finished?
         if (feof(file) != 0) {
             // Create END packet and send it
-            pkt = malloc(sizeof(struct packet));
-            bzero(pkt, sizeof(struct packet));
-            pkt->type = 'E';
-            pkt->seq  = 0;
-            pkt->len  = 0;
+            pkt->payload->type = 'E';
+            pkt->payload->seq  = 0;
+            pkt->payload->len  = 0;
 
-            sendPacketTo(sockfd, pkt, rp->ai_addr);
+            sendPacketTo(sockfd, pkt, esp->ai_addr);
 
             free(pkt);
             break;
@@ -231,9 +290,9 @@ int main(int argc, char **argv) {
         // Create DATA packet
         pkt = malloc(sizeof(struct packet));
         bzero(pkt, sizeof(struct packet));
-        pkt->type = 'D';
-        pkt->seq  = sequenceNum;
-        pkt->len  = payloadLen;
+        pkt->payload->type = 'D';
+        pkt->payload->seq  = sequenceNum;
+        pkt->payload->len  = payloadLen;
 
         // Chunk the next batch of file data into this packet
         char buf[payloadLen];
@@ -250,8 +309,13 @@ int main(int argc, char **argv) {
         */
 
         // Send the DATA packet to the requester 
-        sendPacketTo(sockfd, pkt, (struct sockaddr *)rp->ai_addr);
-
+        sendPacketTo(sockfd, pkt, (struct sockaddr *)esp->ai_addr);
+		
+		timeoutEnd = timeout + getTimeMS();
+		while (timeoutEnd > getTimeMS()) {
+		
+		}
+		
         // Cleanup packets
         free(pkt);
 

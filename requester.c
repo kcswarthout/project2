@@ -225,8 +225,7 @@ int main(int argc, char **argv) {
 		pkt->priority = HIGH_PRIORITY;
 		pkt->length = HEADER_SIZE + strlen(fileOption) + 1;
     
-		pkt = serializeIpPacket(pkt);
-        sendPacketTo(sockfd, pkt, sp->ai_addr);
+        sendIpPacketTo(sockfd, pkt, esp->ai_addr);
     
         free(pkt);
     
@@ -242,10 +241,11 @@ int main(int argc, char **argv) {
         //       requester sits blocked in recvfrom below, but doesn't recv 
         // NOTE: this isn't happening anymore with the rate limit betw 1-1000 pkt/sec
     
-        struct sockaddr_storage senderAddr;
-        bzero(&senderAddr, sizeof(struct sockaddr_storage));
+        struct sockaddr_storage emulAddr;
+        bzero(&emulAddr, sizeof(struct sockaddr_storage));
         socklen_t len = sizeof(senderAddr);
-		
+		struct packet **buffer = malloc(window * (sizeof (void *)));
+		unsigned long start = 1;
 		struct ip_packet *rpkt;
         // Start a recv loop here to get all packets for the given part
         for (;;) {
@@ -284,15 +284,27 @@ int main(int argc, char **argv) {
                 //printf("<- [Received DATA packet] ");
                 //printPacketInfo(rpkt->payload, (struct sockaddr_storage *)&senderAddr);
     
-                // Save the data so the file can be reassembled later
-                size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
-                if (bytesWritten != rpkt->payload->len) {
-                    fprintf(stderr,
-                        "Incomplete file write: %d bytes written, %lu pkt len",
-                        (int)bytesWritten, rpkt->payload->len);
-                } else {
-                    fflush(file);
-                }
+                // Save the data to a buffer
+				if ( rpkt->payload->seq - start < window) {
+					buffer[rpkt->payload->seq - start] = rpkt->payload;
+				}
+				else {
+					int i;
+					for (i = 0; i < window; i++) {
+						if (buffer[i] != NULL) {
+							*size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
+							if (bytesWritten != rpkt->payload->len) {
+								fprintf(stderr,
+									"Incomplete file write: %d bytes written, %lu pkt len",
+									(int)bytesWritten, rpkt->payload->len);
+							} else {
+								fflush(file);
+							}
+							buffer[i] = NULL;
+						}
+					}
+					start += window;
+				}
             }
     
             // Handle END packet
@@ -307,7 +319,21 @@ int main(int argc, char **argv) {
                 printf("Total payload bytes recvd: %lu\n", numBytesRecvd);
                 printf("Average packets/second: %d\n", (int)(numPacketsRecvd / dt));
                 printf("Duration of test: %f sec\n\n", dt);
-    
+				
+				int i;
+				for (i = 0; i < window; i++) {
+					if (buffer[i] != NULL) {
+						*size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
+						if (bytesWritten != rpkt->payload->len) {
+							fprintf(stderr,
+								"Incomplete file write: %d bytes written, %lu pkt len",
+								(int)bytesWritten, rpkt->payload->len);
+						} else {
+							fflush(file);
+						}
+						buffer[i] = NULL;
+					}
+				}
                 break;
             }
 			pkt = malloc(sizeof(struct ip_packet));
@@ -321,9 +347,8 @@ int main(int argc, char **argv) {
 			pkt->destPort = rpkt->srcPort;
 			pkt->priority = HIGH_PRIORITY;
 			pkt->length = HEADER_SIZE + 1;
-    
-			pkt = serializeIpPacket(pkt);
-			sendPacketTo(sockfd, pkt, sp->ai_addr);
+   
+			sendIpPacketTo(sockfd, pkt, esp->ai_addr);
         }
         part = part->next_part;
         free(pkt);

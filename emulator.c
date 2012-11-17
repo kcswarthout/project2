@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 	struct ip_packet **queue = malloc(3 * queueLength * (sizeof (void *)));
 	struct end_packet_list *ePktList[3] = {malloc(sizeof(struct end_packet_list)), 
 			malloc(sizeof(struct end_packet_list)), malloc(sizeof(struct end_packet_list))};
-	struct end_packet_list *ePktTail[3] = {&ePktList[0], &ePktList[1], &ePktList[2]};
+	struct end_packet_list *ePktTail[3] = {ePktList[0], ePktList[1], ePktList[2]};
 	
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
@@ -216,7 +216,6 @@ int main(int argc, char **argv) {
 					logP(currPkt, "Loss event occurred");
 				}
 				else {
-					currPkt = serializeIpPacket(currPkt);
 					sendIpPacketTo(sockfd, currPkt, (struct sockaddr*)nextSock);
 					free(currPkt);
 					currPkt = NULL;
@@ -238,7 +237,7 @@ int main(int argc, char **argv) {
 						queuePtr[i][0] = 0;
 					}
 					queueFull[i] = 0;
-					if (ePktList[i]->pkt != null) {
+					if (ePktList[i]->pkt != NULL) {
 						queue[(i*queueLength) + queuePtr[i][1]] = ePktList[i]->pkt;
 						queuePtr[i][1]++;
 						if (queuePtr[i][1] == queueLength) {

@@ -8,6 +8,13 @@
 #include "packet.h"
 #include "utilities.h"
 
+unsigned char priorityBin(int prior) {
+	if (prior > 2 || prior < 0) {
+		perrorExit("Invalid priority value");
+	}
+	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
+	return priority[prior - 1];
+}
 
 void *serializePacket(struct packet *pkt) {
     if (pkt == NULL) {

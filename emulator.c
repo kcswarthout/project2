@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
 	int queuePtr[3][2] = {{0}};
 	int queueFull[3] = {0};
-	struct ip_packet **queue = malloc(3 * queueLength * (sizeof (struct *ip_packet)));
+	struct ip_packet **queue = malloc(3 * queueLength * (sizeof (void *)));
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
 	struct ip_packet *currPkt = NULL;
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 							log(pkt, tmpStr);
 						}
 						else {
-							queue[i][queuePtr[i][1]] = pkt;
+							queue[(i*queueLength) + queuePtr[i][1]] = pkt;
 							queuePtr[i][1]++;
 							if (queuePtr[i][1] == queueLength) {
 								queuePtr[i][1] = 0;
@@ -219,8 +219,8 @@ int main(int argc, char **argv) {
 		if (currPkt == NULL) {
 			for (i = 0; i < 3; i++) {
 				if (queuePtr[i][0] != queuePtr[i][1] || queueFull[i]) {
-					currPkt = queue[i][(queuePtr[i][0])];
-					queue[i][(queuePtr[i][0])] = NULL;
+					currPkt = queue[(i*queueLength) + queuePtr[i][1]];
+					queue[(i*queueLength) + queuePtr[i][1]] = NULL;
 					queuePtr[i][0]++;
 					if (queuePtr[i][0] == queueLength) {
 						queuePtr[i][0] = 0;

@@ -1,3 +1,18 @@
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <errno.h>
+#include <time.h>
+#include <fcntl.h>
+#include <strings.h>
+#include <string.h>
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 #include "utilities.h"
 
@@ -88,7 +103,7 @@ unsigned long addrToName(unsigned long addr) {
     hints.ai_flags    = 0;
 	
 	char ipStr[16];
-	inet_ntop(AF_INET, addr, ipStr, sizeof ipStr);
+	inet_ntop(AF_INET, &addr, ipStr, sizeof ipStr);
 	
     struct addrinfo *info;
     int errcode = getaddrinfo(ipStr, NULL, &hints, &info);

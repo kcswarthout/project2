@@ -30,7 +30,7 @@ int size = 0;
 struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 	if (table == NULL) printf("No table entries");
 	if (pkt == NULL) perrorExit("nextHop function: pkt null");
-	struct table_entry *nextHop = NULL;
+	struct table_entry *nextEntry = NULL;
 	int i;
 	for (i = 0; i < size; i++) {
 		if (table[i]->dest == pkt->sin_addr) {
@@ -41,12 +41,12 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 					socket->sin_addr = table[i]->nextHop;
 					socket->sin_port = table[i]->nextHopPort;
 				}
-				nextHop = table[i];
+				*nextEntry = table[i];
 				break;
 			}
 		}
 	}
-    return nextHop;
+    return nextEntry;
 }
 
 bool shouldForward(ip_packet *pkt) {

@@ -1,3 +1,5 @@
+#include "packet.h"
+
 #ifndef _FORWARDTABLE_H_
 #define _FORWARDTABLE_H_
 

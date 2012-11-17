@@ -13,7 +13,7 @@ sender: sender.c utilities.c packet.c
 	$(CC) $(CFLAGS) -o $@ $^;   \
 	echo "  [complete]"
 
-emulator: emulator.c utilities.c packet.c forwardtable.c
+emulator: emulator.c utilities.c packet.c forwardtable.c log.c
 	@echo "Building emulator..."; \
 	$(CC) $(CFLAGS) -o $@ $^;   \
 	echo "  [complete]"

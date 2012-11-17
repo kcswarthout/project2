@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     printf("Port        : %s\n", portStr);
     printf("Queue       : %s\n", queueStr);
     printf("File Name   : %s\n", filename);
-    printf("Log         : %s\n", logname);
+    printf("logP         : %s\n", logname);
 
     // Convert program args to values
     int emulPort  = atoi(portStr);
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     puts("");
 
 	srand(time(NULL));
-	initLog(filename);
+	initLog(logname);
 	
     // ------------------------------------------------------------------------
     // Setup emul address info 
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
 						if (queueFull[i]) {
 							char tmpStr[30] = {'\0'};
 							sprintf(tmpStr, "Priority queue %d full", i);
-							log(pkt, tmpStr);
+							logP(pkt, tmpStr);
 						}
 						else {
 							queue[(i*queueLength) + queuePtr[i][1]] = pkt;
@@ -184,11 +184,11 @@ int main(int argc, char **argv) {
 				}
 				if (i == 3) {
 					perror("Invalid packet priority value");
-					log(pkt, "Invalid packet priority value");
+					logP(pkt, "Invalid packet priority value");
 				}
 			}
 			else {
-				log(pkt, "No forwarding entry found");
+				logP(pkt, "No forwarding entry found");
 			}
 			
 		}
@@ -202,7 +202,7 @@ int main(int argc, char **argv) {
 					lossChance = 0;
 				}
 				if (lossChance > rand() % 100) {
-					log(currPkt, "Loss event occurred");
+					logP(currPkt, "Loss event occurred");
 				}
 				else {
 					sendIpPacketTo(sockfd, currPkt, (struct sockaddr*)nextSock);

@@ -14,14 +14,16 @@ void *file = NULL;
 int initLog(char *filename) {
 	file = fopen(filename, "a");
     if (file == NULL) {
-		perror("Log file open error");
+		perror("log file open error");
 		return 0;
 	}
 	
-	puts("\nLog file opened.");
+	puts("\nlog file opened.");
 	return 1;
 }
 
-void log(struct ip_packet *pkt, char *str) {
-	fprintf((FILE*)file, "Packet dropped at time %llu ms\n     Priority: %hhu     Size: %lu \n     Dest: %s %iu \n     Src:  %s %iu \n     Cause: %s \n", getTimeMS(), pkt->priority, pkt->length, addrToName(pkt->dest), pkt->destPort, addrToName(pkt->src), pkt->srcPort, str);
+void logP(struct ip_packet *pkt, char *str) {
+	fprintf((FILE*)file, 
+		"Packet dropped at time %llu ms\n     Priority: %hhu     Size: %lu \n     Dest: %s %iu \n     Src:  %s %iu \n     Cause: %s \n", 
+		getTimeMS(), pkt->priority, pkt->length, addrToName(pkt->dest), pkt->destPort, addrToName(pkt->src), pkt->srcPort, str);
 }

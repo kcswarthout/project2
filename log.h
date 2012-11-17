@@ -5,4 +5,4 @@
 
 int initLog(char *filename);
 
-void log(struct ip_packet *pkt, char *str);
+void logP(struct ip_packet *pkt, char *str);

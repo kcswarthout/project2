@@ -1,3 +1,4 @@
+#include <netinet/in.h>
 #include "packet.h"
 
 #ifndef _FORWARDTABLE_H_
@@ -10,7 +11,7 @@ struct table_entry {
 	unsigned int nextHopPort;
 	unsigned long delay;
 	int lossChance;
-};
+} __attribute__((packed));
 
 struct raw_entry {
 	char *dest;

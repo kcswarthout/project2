@@ -8,7 +8,7 @@
 
 #include "log.h"
 
-File *file = NULL;
+void *file = NULL;
 
 int initLog(char *filename) {
 	file = fopen(filename, "a");
@@ -21,7 +21,7 @@ int initLog(char *filename) {
 	return 1;
 }
 
-void log(ip_packet *pkt, char *str) {
-	fprintf("Packet dropped at time %ull ms\n     Priority: %uhh     Size: %ul\n     Dest: %s %ui\n     Src:  %s %ui\n     Cause: %s\n",
+void log(struct ip_packet *pkt, char *str) {
+	fprintf((file *)file, "Packet dropped at time %ull ms\n     Priority: %uhh     Size: %ul\n     Dest: %s %ui\n     Src:  %s %ui\n     Cause: %s\n",
 		getTimeMS(), pkt->priority, pkt->length, addrToName(pkt->dest), pkt->destPort, addrToName(pkt->src), pkt->srcPort, str);
 }

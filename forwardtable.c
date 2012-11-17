@@ -16,6 +16,8 @@
 #include <netdb.h>
 
 #include "utilities.h"
+#include "forwardtable.h"
+#include "packet.h"
 
 #define TRACKER "tracker.txt"
 #define TOK_PER_LINE 8
@@ -36,7 +38,7 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 				if (socket != NULL) {
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
-					socket->sin_addr = table[i].nextHop;
+					socket->sin_addr.s_addr = table[i].nextHop;
 					socket->sin_port = table[i].nextHopPort;
 				}
 				*nextEntry = table[i];
@@ -59,7 +61,7 @@ int shouldForward(ip_packet *pkt) {
 //   a linked list of file_entry structures that contain the location 
 //   and sequence information from the tracker for the specified file.
 // ----------------------------------------------------------------------------
-int *parseFile(const char *filename, char *hostname, unsigned int port) {
+int parseFile(const char *filename, char *hostname, unsigned int port) {
     if (filename == NULL) ferrorExit("ParseTracker: invalid filename");
 
     // Setup the rawTable
@@ -95,7 +97,7 @@ int *parseFile(const char *filename, char *hostname, unsigned int port) {
             entry->destPort     = atoi(tokens[DEST_PORT]);
 			entry->nextHop      = strdup(tokens[NEXT_HOP]);
             entry->nextHopPort  = atoi(tokens[NEXT_HOP_PORT]);
-            entry->delay 		= strtoul(tokens[DELAY]);
+            entry->delay 		= atoi(tokens[DELAY]);
             entry->lossChance 	= atoi(tokens[LOSS_CHANCE]);
 
             // Link it in to the list of raw_entries

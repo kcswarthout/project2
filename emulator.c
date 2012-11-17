@@ -218,8 +218,8 @@ int main(int argc, char **argv) {
 		if (currPkt == NULL) {
 			for (i = 0; i < 3; i++) {
 				if (queuePtr[i][0] != queuePtr[i][1] || queueFull[i]) {
-					currPkt = queue[i][(queuePtr[i][0])];
-					queue[i][(queuePtr[i][0])] = NULL;
+					currPkt = &queue[i][(queuePtr[i][0])];
+					&queue[i][(queuePtr[i][0])] = NULL;
 					queuePtr[i][0]++;
 					if (queuePtr[i][0] == queueLength) {
 						queuePtr[i][0] = 0;

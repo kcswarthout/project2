@@ -17,8 +17,6 @@
 #ifndef _UTILITIES_H_
 #define _UTILITIES_H_
 
-#include <netdb.h>
-
 #define LOOPBACK "127.0.0.1"
 
 // ----------------------------------------------------------------------------

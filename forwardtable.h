@@ -19,7 +19,7 @@ struct raw_entry {
 	unsigned int nextHopPort;
 	unsigned int delay;
 	int lossChance;
-	struct rawEntry *nextEntry;
+	struct raw_entry *nextEntry;
 };
 
 
@@ -29,13 +29,13 @@ struct raw_entry {
 //   a linked list of file_part structures that contain the location 
 //   and sequence information from the tracker for the specified file.
 // ----------------------------------------------------------------------------
-bool parseFile(const char *filename, char *hostname, unsigned int port);
+int parseFile(const char *filename, char *hostname, unsigned int port);
 
 // ----------------------------------------------------------------------------
 struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket);
 
 // ----------------------------------------------------------------------------
-bool shouldForward(ip_packet *pkt);
+int shouldForward(ip_packet *pkt);
 
 // ----------------------------------------------------------------------------
 

@@ -3,6 +3,6 @@
 #include "forwardtable.h"
 
 
-bool initLog(char *filename);
+int initLog(char *filename);
 
-void log(ip_packet pkt, char *str);
+void log(ip_packet *pkt, char *str);

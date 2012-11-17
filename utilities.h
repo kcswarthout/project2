@@ -44,5 +44,7 @@ void ferrorExit(const char *msg);
 // ----------------------------------------------------------------------------
 unsigned long nameToAddr(char *name);
 
+char* addrToName(unsigned long addr);
+
 #endif
 

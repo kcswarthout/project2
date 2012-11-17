@@ -1,5 +1,3 @@
-
-
 #include "forwardtable.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -33,13 +31,13 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 	struct table_entry *nextEntry = NULL;
 	int i;
 	for (i = 0; i < size; i++) {
-		if (table[i]->dest == pkt->sin_addr) {
-			if (table[i]->destPort == pkt->sin_port) {
+		if (table[i].dest == pkt->dest) {
+			if (table[i].destPort == pkt->destPort) {
 				if (socket != NULL) {
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
-					socket->sin_addr = table[i]->nextHop;
-					socket->sin_port = table[i]->nextHopPort;
+					socket->sin_addr = table[i].nextHop;
+					socket->sin_port = table[i].nextHopPort;
 				}
 				*nextEntry = table[i];
 				break;
@@ -49,10 +47,10 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
     return nextEntry;
 }
 
-bool shouldForward(ip_packet *pkt) {
+int shouldForward(ip_packet *pkt) {
 	struct ip_packet *p = nextHop(pkt);
-	if (p == NULL) return false;
-	return true;
+	if (p == NULL) return 0;
+	return 1;
 } 
 
 // ----------------------------------------------------------------------------
@@ -61,7 +59,7 @@ bool shouldForward(ip_packet *pkt) {
 //   a linked list of file_entry structures that contain the location 
 //   and sequence information from the tracker for the specified file.
 // ----------------------------------------------------------------------------
-bool *parseFile(const char *filename, char *hostname, unsigned int port) {
+int *parseFile(const char *filename, char *hostname, unsigned int port) {
     if (filename == NULL) ferrorExit("ParseTracker: invalid filename");
 
     // Setup the rawTable
@@ -137,7 +135,7 @@ bool *parseFile(const char *filename, char *hostname, unsigned int port) {
 		free(rawTable);
 	}
 	free(rawTable);
-    return info; // success
+    return 1; // success
 }
 
 

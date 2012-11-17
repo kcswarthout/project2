@@ -8,6 +8,7 @@
 #include <strings.h>
 #include <string.h>
 
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -95,7 +96,7 @@ unsigned long nameToAddr(char *name) {
 	return addr;
 }
 
-unsigned long addrToName(unsigned long addr) {
+char* addrToName(unsigned long addr) {
 	struct addrinfo hints;
     bzero(&hints, sizeof(struct addrinfo));
     hints.ai_family   = AF_INET;

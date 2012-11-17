@@ -1,3 +1,19 @@
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <errno.h>
+#include <time.h>
+#include <fcntl.h>
+#include <strings.h>
+#include <string.h>
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #ifndef _UTILITIES_H_
 #define _UTILITIES_H_
 

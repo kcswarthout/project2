@@ -1,12 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
-
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 
 #include "utilities.h"
 
@@ -87,4 +78,42 @@ unsigned long nameToAddr(char *name) {
     struct sockaddr_in *ip = (struct sockaddr_in *)info->ai_addr;
 	unsigned long addr = ip->sin_addr.s_addr;
 	return addr;
+}
+
+unsigned long addrToName(unsigned long addr) {
+	struct addrinfo hints;
+    bzero(&hints, sizeof(struct addrinfo));
+    hints.ai_family   = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags    = 0;
+	
+	char ipStr[16];
+	inet_ntop(AF_INET, addr, ipStr, sizeof ipStr);
+	
+    struct addrinfo *info;
+    int errcode = getaddrinfo(ipStr, NULL, &hints, &info);
+    if (errcode != 0) {
+        fprintf(stderr, "Utilities getaddrinfo: %s\n", gai_strerror(errcode));
+        exit(EXIT_FAILURE);
+    }
+
+    // Loop through all the results of getaddrinfo and try to create a socket for requester
+    // NOTE: this is done so that we can find which of the getaddrinfo results is the requester
+	
+	int sockfd;
+    struct addrinfo *p;
+    for(p = info; p != NULL; p = p->ai_next) {
+        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (sockfd == -1) {
+            perror("Socket error");
+            continue;
+        }
+
+        break;
+    }
+    if (p == NULL) perrorExit("Requester lookup failed to create socket");
+    //else            printf("Requester socket created.\n\n");
+    close(sockfd); // don't need this socket
+	
+	return info->ai_canonname;
 }

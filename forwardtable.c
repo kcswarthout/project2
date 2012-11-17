@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 
 #include "forwardtable.h"
 #include "utilities.h"
@@ -8,9 +6,9 @@
 #define TRACKER "tracker.txt"
 #define TOK_PER_LINE 8
 
-enum token {EMULATOR, EMUL_PORT, DESTINATION, DEST_PORT, NEXT_HOP, NEXT_HOP_PORT, DELAY, LOSS_CHANCE};
+enum token { EMULATOR, EMUL_PORT, DESTINATION, DEST_PORT, NEXT_HOP, NEXT_HOP_PORT, DELAY, LOSS_CHANCE };
 
-table_entry *table = NULL;
+struct table_entry *table = NULL;
 int size = 0;
 
 struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
@@ -126,51 +124,4 @@ bool *parseFile(const char *filename, char *hostname, unsigned int port) {
     return info; // success
 }
 
-// ----------------------------------------------------------------------------
-void printFileInfo(struct file_info *info) {
-    if (info == NULL) {
-        fprintf(stderr, "Cannot print null file_info.\n");
-        return;
-    }
 
-    printf("file_info for \"%s\" [%p]:\n", info->filename, info);
-    printf("--------------------------------------\n");
-    struct file_entry *entry = info->entrys;
-    while (entry != NULL) {
-        printFileentryInfo(entry);
-        entry = entry->next_entry;
-    }
-
-    puts("");
-}
-
-// ----------------------------------------------------------------------------
-void printFileentryInfo(struct file_entry *entry) {
-    if (entry == NULL) {
-        fprintf(stderr, "Cannot print null file_entry info.\n");
-        return;
-    }
-
-    printf("  file_entry info   : [%p]\n", entry);
-    printf("    id             : %d\n", entry->id);
-    printf("    sender hostname: %s\n", entry->sender_hostname);
-    printf("    sender port    : %d\n", entry->sender_port);
-    printf("    next entry      : [%p]\n", entry->next_entry);
-}
-
-// ----------------------------------------------------------------------------
-void freeFileInfo(struct file_info *info) {
-    if (info == NULL) return;
-
-    // Walk the entrys list, freeing each entry
-    struct file_entry *entry = info->entrys;
-    while (entry != NULL) {
-        struct file_entry *p = entry;
-        entry = entry->next_entry;
-        free(p->sender_hostname);
-        free(p);
-    }
-
-    free(info->filename);
-    free(info);
-}

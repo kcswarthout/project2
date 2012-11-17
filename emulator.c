@@ -1,21 +1,7 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <errno.h>
-#include <time.h>
-#include <fcntl.h>
-#include <strings.h>
-#include <string.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-
+#include "log.h"
 #include "utilities.h"
 #include "packet.h"
+#include "forwardtable.h"
 
 
 int main(int argc, char **argv) {
@@ -28,10 +14,9 @@ int main(int argc, char **argv) {
     }
 
     char *portStr    = NULL;
-    char *reqPortStr = NULL;
-    char *rateStr    = NULL;
-    char *seqNumStr  = NULL;
-    char *lenStr     = NULL;
+    char *queueStr 	 = NULL;
+    char *filename   = NULL;
+    char *logname	 = NULL;
 
     int cmd;
     while ((cmd = getopt(argc, argv, "p:q:f:l:")) != -1) {
@@ -73,6 +58,7 @@ int main(int argc, char **argv) {
     puts("");
 
 	srand(time(NULL));
+	initLog(filename);
 	
     // ------------------------------------------------------------------------
     // Setup emul address info 
@@ -113,20 +99,20 @@ int main(int argc, char **argv) {
     if (sp == NULL) perrorExit("Send socket creation failed");
     else            printf("emul socket created.\n");
 
-	parseFile(filename, sp->canonname, emulPort);
+	parseFile(filename, sp->ai_canonname, emulPort);
 	
 	
 
     // ------------------------------------------------------------------------
-    puts("emul waiting for request packet...\n");
+	// The Big Loop of DOOM
 
-	int queuePtr[3][2] = {0};
-	bool queueFull[3] = {0};
-	struct ipPacket* queue = malloc(3 * queueLength * (sizeof *ipPacket));
+	int queuePtr[3][2] = {{0}};
+	int queueFull[3] = {0};
+	struct ipPacket* queue = malloc(3 * queueLength * (sizeof *ip_packet));
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
-	struct ipPacket* currPkt = NULL;
-	struct sockaddr_in *nextHop = malloc(sizeof(struct sockaddr_in));
+	struct ip_packet* currPkt = NULL;
+	struct sockaddr_in *nextSock = malloc(sizeof(struct sockaddr_in));
 	struct table_entry *currEntry = NULL;
 	
     char *filename = NULL;
@@ -146,7 +132,7 @@ int main(int argc, char **argv) {
         
         bzero(msg, sizeof(struct packet));
 
-		retval = select(sockfd + 1, fds, NULL, NULL, tv);
+		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
         
 		if (retval > 0) {
 			// Receive a message
@@ -174,7 +160,7 @@ int main(int argc, char **argv) {
 								queuePtr[i][1] = 0;
 							}
 							if (queuePtr[i][1] == queuePtr[i][0]) {
-								queueFull[i] = true;
+								queueFull[i] = 1;
 							}
 						}
 						break;
@@ -203,7 +189,7 @@ int main(int argc, char **argv) {
 					log(currPkt, "Loss event occurred");
 				}
 				else {
-					sendIpPacketTo(sockfd, currPkt, nextHop);
+					sendIpPacketTo(sockfd, currPkt, nextSock);
 					free(currPkt);
 					currPkt = NULL;
 				}
@@ -223,8 +209,8 @@ int main(int argc, char **argv) {
 					if (queuePtr[i][0] = queueLength) {
 						queuePtr[i][0] = 0;
 					}
-					queueFull[i] = false;
-					currEntry = nextHop(currPkt, nextHop);
+					queueFull[i] = 0;
+					currEntry = nextHop(currPkt, nextSock);
 					tv->tv_sec = currEntry->delay / 1000;
 					tv->tv_usec = (currEntry->delay % 1000) * 1000;
 				}

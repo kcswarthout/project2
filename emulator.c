@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
 	int queuePtr[3][2] = {{0}};
 	int queueFull[3] = {0};
-	struct ip_packet *queue = malloc(3 * queueLength * (sizeof ip_packet));
+	struct ip_packet *queue[3][queueLength] = {{NULL}};
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
 	struct ip_packet *currPkt = NULL;
@@ -158,6 +158,7 @@ int main(int argc, char **argv) {
 				continue;
 			}
 			// Deserialize the message into a packet 
+			pkt = malloc(sizeof(struct ip_packet));
 			bzero(pkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, pkt);
 			if (shouldForward(pkt))	{
@@ -169,7 +170,7 @@ int main(int argc, char **argv) {
 							log(pkt, tmpStr);
 						}
 						else {
-							memcpy(queue[i][queuePtr[i][1]], pkt, sizeof(struct ip_packet));
+							queue[i][queuePtr[i][1]] = pkt;
 							queuePtr[i][1]++;
 							if (queuePtr[i][1] == queueLength) {
 								queuePtr[i][1] = 0;
@@ -197,7 +198,7 @@ int main(int argc, char **argv) {
 			if (currPkt != NULL) {
 				int lossChance = currEntry->lossChance;
 				// Determine if packet should be dropped
-				if (currPkt->pkt->type == 'E') {
+				if (currPkt->payload->type == 'E') {
 					lossChance = 0;
 				}
 				if (lossChance > rand() % 100) {
@@ -218,7 +219,8 @@ int main(int argc, char **argv) {
 		if (currPkt == NULL) {
 			for (i = 0; i < 3; i++) {
 				if (queuePtr[i][0] != queuePtr[i][1] || queueFull[i]) {
-					currPkt = &queue[i][(queuePtr[i][0])];
+					currPkt = queue[i][(queuePtr[i][0])];
+					queue[i][(queuePtr[i][0])] = null;
 					queuePtr[i][0]++;
 					if (queuePtr[i][0] == queueLength) {
 						queuePtr[i][0] = 0;

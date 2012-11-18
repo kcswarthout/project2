@@ -310,8 +310,8 @@ int main(int argc, char **argv) {
 			bzero(spkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, spkt);
 			pkt = (struct packet *)spkt->payload;
-			free(buffer[pkt->seq - start]);
-			buffer[pkt->seq - start] = NULL;
+			free(buffer[pkt->seq - windowStart]);
+			buffer[pkt->seq - windowStart] = NULL;
 			pkt = NULL;
 		}
 		else {
@@ -377,9 +377,9 @@ int main(int argc, char **argv) {
 					fread(buf, 1, payloadLen, file); // TODO: check return value
 					memcpy(pkt->payload, buf, sizeof(buf));
 					printf("set buffer\n");
-					buffer[pkt->seq - start] = pkt;
-					buffTimer[pkt->seq - start] = timeout + getTimeMS();
-					buffTOCount[pkt->seq - start] = 0;
+					buffer[pkt->seq - windowStart] = pkt;
+					buffTimer[pkt->seq - windowStart] = timeout + getTimeMS();
+					buffTOCount[pkt->seq - windowStart] = 0;
 					
 					// Update sequence number for next packet
 					sequenceNum++;

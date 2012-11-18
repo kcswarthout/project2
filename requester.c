@@ -158,6 +158,8 @@ int main(int argc, char **argv) {
     if (esp == NULL) perrorExit("Send socket creation failed");
     else            printf("emul socket created.\n");
 	
+	close(esockfd);
+	
     // ------------------------------------------------------------------------
     // Sender hints TODO: move into part loop
     struct addrinfo shints;

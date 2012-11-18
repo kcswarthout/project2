@@ -169,15 +169,16 @@ int main(int argc, char **argv) {
         // Try to bind the socket
         if (bind(esockfd, esp->ai_addr, esp->ai_addrlen) == -1) {
             perror("Bind error");
-            close(sockfd);
+            close(wsockfd);
             continue;
         }
 
         break;
     }
-    if (esp == NULL) perrorExit("Send socket creation failed");
+    if (esp == NULL) perrorExit("emul socket creation failed");
     else            printf("emul socket created.\n");
 	
+	close(esockfd);
 	
     // -----------------------------===========================================
     // REQUESTER ADDRESS INFO

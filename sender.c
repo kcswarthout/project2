@@ -88,8 +88,13 @@ int main(int argc, char **argv) {
         ferrorExit("Invalid sender port");
     if (requesterPort <= 1024 || requesterPort >= 65536)
         ferrorExit("Invalid requester port");
+	if (emulPort <= 1024 || emulPort >= 65536)
+        ferrorExit("Invalid emulator port");
     if (sendRate > 1000 || sendRate < 1) 
         ferrorExit("Invalid sendrate");
+	if (timeout > 1000 || timeout < 1) 
+        ferrorExit("Invalid timeout");
+	
     puts("");
 
     // ------------------------------------------------------------------------
@@ -155,14 +160,14 @@ int main(int argc, char **argv) {
     struct addrinfo *esp;
     for(esp = emulinfo; esp != NULL; esp = esp->ai_next) {
         // Try to create a new socket
-        sockfd = socket(esp->ai_family, esp->ai_socktype, esp->ai_protocol);
-        if (sockfd == -1) {
+        esockfd = socket(esp->ai_family, esp->ai_socktype, esp->ai_protocol);
+        if (esockfd == -1) {
             perror("Socket error");
             continue;
         }
 
         // Try to bind the socket
-        if (bind(sockfd, esp->ai_addr, esp->ai_addrlen) == -1) {
+        if (bind(esockfd, esp->ai_addr, esp->ai_addrlen) == -1) {
             perror("Bind error");
             close(sockfd);
             continue;
@@ -206,7 +211,7 @@ int main(int argc, char **argv) {
     //else            printf("Requester socket created.\n\n");
     close(requestsockfd); // don't need this socket
 
-	struct sockaddr_in *tmp = (struct sockaddr_in *)rp->ai_addr;
+	sockaddr_in *tmp = (struct sockaddr_in *)rp->ai_addr;
 	unsigned long rIpAddr = tmp->sin_addr.s_addr;
 	
     // ------------------------------------------------------------------------
@@ -315,7 +320,7 @@ int main(int argc, char **argv) {
 					if (buffer[buffIndex] != NULL) {
 						if (buffTimer[buffIndex] <= getTimeMS()) {
 							numLost++;
-							if ([buffIndex] >= 5) {
+							if (buffTOCount[buffIndex] >= 5) {
 								free(buffer[buffIndex]);
 								buffer[buffIndex] = NULL;
 							}

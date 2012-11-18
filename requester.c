@@ -68,7 +68,9 @@ int main(int argc, char **argv) {
     // Validate the argument values
     if (requesterPort <= 1024 || requesterPort >= 65536)
         ferrorExit("Invalid requester port");
-
+	if (emulPort <= 1024 || emulPort >= 65536)
+        ferrorExit("Invalid emulator port");
+		
     // ------------------------------------------------------------------------
 
     // Parse the tracker file for parts corresponding to the specified file
@@ -138,7 +140,7 @@ int main(int argc, char **argv) {
     struct addrinfo *esp;
     for(esp = emulinfo; esp != NULL; esp = esp->ai_next) {
         // Try to create a new socket
-        sockfd = socket(esp->ai_family, esp->ai_socktype, esp->ai_protocol);
+        esockfd = socket(esp->ai_family, esp->ai_socktype, esp->ai_protocol);
         if (sockfd == -1) {
             perror("Socket error");
             continue;
@@ -243,7 +245,7 @@ int main(int argc, char **argv) {
     
         struct sockaddr_storage emulAddr;
         bzero(&emulAddr, sizeof(struct sockaddr_storage));
-        socklen_t len = sizeof(senderAddr);
+        socklen_t len = sizeof(emulAddr);
 		struct packet **buffer = malloc(window * (sizeof (void *)));
 		unsigned long start = 1;
 		struct ip_packet *rpkt;
@@ -254,7 +256,7 @@ int main(int argc, char **argv) {
     
             // Receive a message 
             size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
-                (struct sockaddr *)&senderAddr, &len);
+                (struct sockaddr *)&emulAddr, &len);
             if (bytesRecvd == -1) perrorExit("Receive error");
     
             // Deserialize the message into a packet
@@ -282,7 +284,7 @@ int main(int argc, char **argv) {
     
                 // Print details about the received packet
                 //printf("<- [Received DATA packet] ");
-                //printPacketInfo(rpkt->payload, (struct sockaddr_storage *)&senderAddr);
+                //printPacketInfo(rpkt->payload, (struct sockaddr_storage *)&emulAddr);
     
                 // Save the data to a buffer
 				if ( rpkt->payload->seq - start < window) {
@@ -294,7 +296,7 @@ int main(int argc, char **argv) {
 					int i;
 					for (i = 0; i < window; i++) {
 						if (buffer[i] != NULL) {
-							*size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
+							size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
 							if (bytesWritten != rpkt->payload->len) {
 								fprintf(stderr,
 									"Incomplete file write: %d bytes written, %lu pkt len",

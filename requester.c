@@ -165,6 +165,7 @@ int main(int argc, char **argv) {
     
 	unsigned long sIpAddr;
     struct file_part *part = fileParts->parts;
+	printf("got to loop\n");
     while (part != NULL) {
         // Convert the sender's port # to a string
         char senderPortStr[6] = "\0\0\0\0\0\0";
@@ -207,6 +208,7 @@ int main(int argc, char **argv) {
     
         // ------------------------------------------------------------------------
         // Construct a REQUEST packet
+		printf("request packet constructing\n");
 		struct ip_packet *pkt = NULL;
         pkt = malloc(sizeof(struct ip_packet));
         bzero(pkt, sizeof(struct ip_packet));
@@ -237,6 +239,7 @@ int main(int argc, char **argv) {
         //       requester sits blocked in recvfrom below, but doesn't recv 
         // NOTE: this isn't happening anymore with the rate limit betw 1-1000 pkt/sec
     
+		printf("setup for recv loop\n");
         struct sockaddr_storage emulAddr;
         bzero(&emulAddr, sizeof(struct sockaddr_storage));
         socklen_t len = sizeof(emulAddr);
@@ -244,6 +247,7 @@ int main(int argc, char **argv) {
 		unsigned long start = 1;
 		struct ip_packet *rpkt;
         // Start a recv loop here to get all packets for the given part
+		printf("recv loop\n");
         for (;;) {
             void *msg = malloc(sizeof(struct ip_packet));
             bzero(msg, sizeof(struct ip_packet));
@@ -276,7 +280,7 @@ int main(int argc, char **argv) {
                 printf("payload: %s\n\n", pkt->payload);
                 */
     
-                // Print details about the received packet
+                //Print details about the received packet
                 //printf("<- [Received DATA packet] ");
                 //printPacketInfo(rpkt->payload, (struct sockaddr_storage *)&emulAddr);
     

@@ -22,7 +22,7 @@
 int main(int argc, char **argv) {
     // ------------------------------------------------------------------------
     // Handle commandline arguments
-    if (argc != 5) {
+    if (argc != 11) {
         printf("usage: requester -p <port> -o <file option>\n");
         exit(1);
     }

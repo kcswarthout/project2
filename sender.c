@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
         ferrorExit("Invalid emulator port");
     if (sendRate > 1000 || sendRate < 1) 
         ferrorExit("Invalid sendrate");
-	if (timeout > 1000 || timeout < 1) 
+	if (timeout > 100000 || timeout < 1) 
         ferrorExit("Invalid timeout");
 	
     puts("");

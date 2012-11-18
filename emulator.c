@@ -146,15 +146,14 @@ int main(int argc, char **argv) {
 	struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
 	void *msg = malloc(sizeof(struct ip_packet));
     for (;;) {
+		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
+	
 		// ------------------------------------------------------------------------
 		// receiving half
         
-        bzero(msg, sizeof(struct ip_packet));
-
-		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
-        
 		if (retval > 0) {
 			// Receive a message
+			bzero(msg, sizeof(struct ip_packet));
 			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, NULL, NULL);
 			if (bytesRecvd == -1) {
 				perror("Recvfrom error");

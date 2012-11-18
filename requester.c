@@ -250,10 +250,10 @@ int main(int argc, char **argv) {
         // Start a recv loop here to get all packets for the given part
         for (;;) {
             void *msg = malloc(sizeof(struct ip_packet));
-            bzero(msg, sizeof(struct packet));
+            bzero(msg, sizeof(struct ip_packet));
     
             // Receive a message 
-            size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct packet), 0,
+            size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
                 (struct sockaddr *)&senderAddr, &len);
             if (bytesRecvd == -1) perrorExit("Receive error");
     
@@ -286,6 +286,8 @@ int main(int argc, char **argv) {
     
                 // Save the data to a buffer
 				if ( rpkt->payload->seq - start < window) {
+					buffer[rpkt->payload->seq - start] =  malloc(sizeof(struct packet));
+					memcpy(buffer[rpkt->payload->seq - start], rpkt->payload, sizeof(struct packet));
 					buffer[rpkt->payload->seq - start] = rpkt->payload;
 				}
 				else {
@@ -346,9 +348,10 @@ int main(int argc, char **argv) {
 			pkt->dest = rpkt->src;
 			pkt->destPort = rpkt->srcPort;
 			pkt->priority = HIGH_PRIORITY;
-			pkt->length = HEADER_SIZE + 1;
+			pkt->length = HEADER_SIZE;
    
 			sendIpPacketTo(sockfd, pkt, esp->ai_addr);
+			free(rpkt);
         }
         part = part->next_part;
         free(pkt);

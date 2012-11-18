@@ -26,4 +26,5 @@ void logP(struct ip_packet *pkt, char *str) {
 	fprintf((FILE*)file, 
 		"Packet dropped at time %llu ms\n     Priority: %hhu     Size: %lu \n     Dest: %s %iu \n     Src:  %s %iu \n     Cause: %s \n", 
 		getTimeMS(), pkt->priority, pkt->length, addrToName(pkt->dest), pkt->destPort, addrToName(pkt->src), pkt->srcPort, str);
+	free(pkt);
 }

@@ -131,6 +131,9 @@ int main(int argc, char **argv) {
     if (sp == NULL) perrorExit("Send socket creation failed");
     else            printf("Sender socket created.\n");
 
+	struct sockaddr_in *tmp = (struct sockaddr_in *)sp->ai_addr;
+	unsigned long sIpAddr = tmp->sin_addr.s_addr;
+	
 	// ------------------------------------------------------------------------
     // Setup emul address info 
     struct addrinfo ehints;
@@ -203,6 +206,9 @@ int main(int argc, char **argv) {
     //else            printf("Requester socket created.\n\n");
     close(requestsockfd); // don't need this socket
 
+	struct sockaddr_in *tmp = (struct sockaddr_in *)rp->ai_addr;
+	unsigned long rIpAddr = tmp->sin_addr.s_addr;
+	
     // ------------------------------------------------------------------------
     puts("Sender waiting for request packet...\n");
 
@@ -256,73 +262,153 @@ int main(int argc, char **argv) {
     if (file == NULL) perrorExit("File open error");
     else              printf("Opened file \"%s\" for reading.\n", filename);
 
+	fd_set fds;
+	FD_ZERO(&fds);
+	FD_SET(sockfd, &fds);
+	struct timeval *tv = malloc(sizeof(struct timeval));
+	tv->tv_sec = 0;
+	tv->tv_usec = 0;
+	int retval = 0;
+	
+	int numSent = 0;
+	int numLost = 0;
 	int windowStart = 1;
+	int windowDone = 1;
+	int fileDone = 0;
+	int loopCont = 1;
 	struct packet **buffer = malloc(window * (sizeof (void *)));
-	unsigned int *bufferTimer = malloc(window * (sizeof (int)));
+	unsigned long long *buffTimer = malloc(window * (sizeof (int)));
+	int *buffTOCount = malloc(window * (sizeof (int)));
     unsigned long long start = getTimeMS();
 	unsigned long long timeoutEnd;
-    struct ip_packet *pkt;
-    for (;;) {
-		
-        pkt = malloc(sizeof(struct ip_packet));
-        bzero(pkt, sizeof(struct ip_packet));
-        // Is file part finished?
-        if (feof(file) != 0) {
-            // Create END packet and send it
-            pkt->payload->type = 'E';
-            pkt->payload->seq  = 0;
-            pkt->payload->len  = 0;
-
-            sendPacketTo(sockfd, pkt, esp->ai_addr);
-
-            free(pkt);
-            break;
-        }
-
-        // Send rate limiter
-        unsigned long long dt = getTimeMS() - start;
-        if (dt < 1000 / sendRate) {
-            continue; 
-        } else {
-            start = getTimeMS();
-        }
-
-        // Create DATA packet
-        pkt = malloc(sizeof(struct packet));
-        bzero(pkt, sizeof(struct packet));
-        pkt->payload->type = 'D';
-        pkt->payload->seq  = sequenceNum;
-        pkt->payload->len  = payloadLen;
-
-        // Chunk the next batch of file data into this packet
-        char buf[payloadLen];
-        bzero(buf, payloadLen);
-        fread(buf, 1, payloadLen, file); // TODO: check return value
-        memcpy(pkt->payload, buf, sizeof(buf));
-
-        /*
-        printf("[Packet Details]\n------------------\n");
-        printf("type : %c\n", pkt->type);
-        printf("seq  : %lu\n", pkt->seq);
-        printf("len  : %lu\n", pkt->len);
-        printf("payload: %s\n\n", pkt->payload);
-        */
-
-        // Send the DATA packet to the requester 
-        sendPacketTo(sockfd, pkt, (struct sockaddr *)esp->ai_addr);
-		
-		timeoutEnd = timeout + getTimeMS();
-		while (timeoutEnd > getTimeMS()) {
-		
+    struct packet *pkt;
+	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
+	struct ip_packet *msg = malloc(sizeof(struct ip_packet));
+    while (loopCont) {
+		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
+	
+		// ------------------------------------------------------------------------
+		// receiving half
+        
+		if (retval > 0) {
+			// Receive a message
+			bzero(msg, sizeof(struct ip_packet));
+			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, NULL, NULL);
+			if (bytesRecvd == -1) {
+				perror("Recvfrom error");
+				fprintf(stderr, "Failed/incomplete receive: ignoring\n");
+				continue;
+			}
+			// Deserialize the message into a packet 
+			bzero(spkt, sizeof(struct ip_packet));
+			deserializeIpPacket(msg, spkt);
+			free(buffer[spkt->payload->seq - start]);
+			buffer[spkt->payload->seq - start] = NULL;
 		}
-		
-        // Cleanup packets
-        free(pkt);
+		else {
+			// ------------------------------------------------------------------------
+			// sending half
+			if (sequenceNum >= window + windowStart) {
+				int buffIndex;
+				windowDone = 1;
+				for (buffIndex = 0; buffIndex < window; buffIndex++) {	
+					if (buffer[buffIndex] != NULL) {
+						if (buffTimer[buffIndex] <= getTimeMS()) {
+							numLost++;
+							if ([buffIndex] >= 5) {
+								free(buffer[buffIndex]);
+								buffer[buffIndex] = NULL;
+							}
+							else {
+								buffTOCount[buffIndex]++;
+								pkt = buffer[buffIndex];
+								windowDone = 0;
+								if (timeoutEnd > buffTimer[buffIndex]) {
+									timeoutEnd = buffTimer[buffIndex];
+								}
+							}
+						}
+						else {
+							windowDone = 0;
+						}
+					}
+				}
+				if (windowDone) {
+					windowStart += window;
+				}
+				else if ((1000 * sendRate) < (timeoutEnd - getTimeMS())) { 
+					tv->tv_usec = timeoutEnd - getTimeMS();
+				}
+				else {
+					tv->tv_usec = 1000 * sendRate;
+				}
+			}
+			else if (!fileDone) {
+				// Is file part finished?
+				if (feof(file) != 0) {
+					sequenceNum = window + windowStart;
+					fileDone = 1;
+					continue;
+				}
+				else {
+					// Create DATA packet
+					pkt = malloc(sizeof(struct packet));
+					bzero(pkt, sizeof(struct packet));
+					pkt->type = 'D';
+					pkt->seq  = sequenceNum;
+					pkt->len  = payloadLen;
 
-        // Update sequence number for next packet
-        sequenceNum += payloadLen;
+					// Chunk the next batch of file data into this packet
+					char buf[payloadLen];
+					bzero(buf, payloadLen);
+					fread(buf, 1, payloadLen, file); // TODO: check return value
+					memcpy(pkt->payload, buf, sizeof(buf));
+					buffer[pkt->seq - start] = pkt;
+					buffTimer[pkt->seq - start] = timeout + getTimeMS();
+					buffTOCount[pkt->seq - start] = 0;
+					
+					// Update sequence number for next packet
+					sequenceNum++;
+					
+					/*
+					printf("[Packet Details]\n------------------\n");
+					printf("type : %c\n", pkt->type);
+					printf("seq  : %lu\n", pkt->seq);
+					printf("len  : %lu\n", pkt->len);
+					printf("payload: %s\n\n", pkt->payload);
+					*/
+				}
+				tv->tv_usec = 1000 * sendRate;
+			}
+			else {
+				// Create END packet and send it
+				pkt = malloc(sizeof(struct packet));
+				bzero(pkt, sizeof(struct packet));
+				pkt->type = 'E';
+				pkt->seq  = 0;
+				pkt->len  = 0;
+				loopCont = 0;
+			}
+			// Send the packet to the requester 
+			if (pkt != NULL) {
+				bzero(spkt, sizeof(struct ip_packet));
+				spkt->src = sIpAddr;
+				spkt->srcPort = senderPort;
+				spkt->dest = rIpAddr;
+				spkt->destPort = requesterPort;
+				spkt->priority = priority;
+				spkt->length = HEADER_SIZE + pkt->len;
+				memcpy(spkt->payload, pkt, sizeof(struct packet));
+				sendIpPacketTo(sockfd, spkt, (struct sockaddr *)esp->ai_addr);
+				numSent++;
+				pkt = NULL;
+			}
+        }
     }
 
+	free(spkt);
+	free(msg);
+	
     // Cleanup the file
     if (fclose(file) != 0) fprintf(stderr, "Failed to close file \"%s\"\n", filename);
     else                   printf("File \"%s\" closed.\n", filename);

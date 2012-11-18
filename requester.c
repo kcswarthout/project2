@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
         dpkt->seq  = 0;
         dpkt->len  = window;
 		printf("cpy pkt to ip pkt\n");
-        strcpy(pkt->payload->payload, fileOption);
+        strcpy(dpkt->payload, fileOption);
 		memcpy(pkt->payload, dpkt, sizeof(struct packet));
 		pkt->src = rIpAddr;
 		pkt->srcPort = requesterPort;

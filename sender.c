@@ -211,7 +211,7 @@ int main(int argc, char **argv) {
     //else            printf("Requester socket created.\n\n");
     close(requestsockfd); // don't need this socket
 
-	sockaddr_in *tmp = (struct sockaddr_in *)rp->ai_addr;
+	tmp = (struct sockaddr_in *)rp->ai_addr;
 	unsigned long rIpAddr = tmp->sin_addr.s_addr;
 	
     // ------------------------------------------------------------------------

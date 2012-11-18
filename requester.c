@@ -327,7 +327,7 @@ int main(int argc, char **argv) {
 				int i;
 				for (i = 0; i < window; i++) {
 					if (buffer[i] != NULL) {
-						*size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
+						size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
 						if (bytesWritten != rpkt->payload->len) {
 							fprintf(stderr,
 								"Incomplete file write: %d bytes written, %lu pkt len",

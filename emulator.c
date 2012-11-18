@@ -102,14 +102,6 @@ int main(int argc, char **argv) {
             perror("Socket error");
             continue;
         }
-
-        // Try to bind the socket
-        if (bind(sockfd, sp->ai_addr, sp->ai_addrlen) == -1) {
-            perror("Bind error");
-            close(sockfd);
-            continue;
-        }
-
         break;
     }
     if (sp == NULL) perrorExit("Send socket creation failed");

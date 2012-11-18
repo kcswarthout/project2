@@ -166,13 +166,6 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        // Try to bind the socket
-        if (bind(esockfd, esp->ai_addr, esp->ai_addrlen) == -1) {
-            perror("Bind error");
-            close(wsockfd);
-            continue;
-        }
-
         break;
     }
     if (esp == NULL) perrorExit("emul socket creation failed");

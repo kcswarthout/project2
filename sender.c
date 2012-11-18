@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
 	tv->tv_sec = 0;
 	tv->tv_usec = 0;
 	int retval = 0;
-	
+	printf("tv and fd set\n");
 	int numSent = 0;
 	int numLost = 0;
 	int windowStart = 1;
@@ -286,6 +286,7 @@ int main(int argc, char **argv) {
     struct packet *pkt;
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
 	struct ip_packet *msg = malloc(sizeof(struct ip_packet));
+	printf("loop\n");
     while (loopCont) {
 		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
 	
@@ -294,12 +295,16 @@ int main(int argc, char **argv) {
         
 		if (retval > 0) {
 			// Receive a message
+			printf("retval > 0\n");
 			bzero(msg, sizeof(struct ip_packet));
 			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, NULL, NULL);
 			if (bytesRecvd == -1) {
 				perror("Recvfrom error");
 				fprintf(stderr, "Failed/incomplete receive: ignoring\n");
 				continue;
+			}
+			else {
+				printf("recv\n");
 			}
 			// Deserialize the message into a packet 
 			bzero(spkt, sizeof(struct ip_packet));
@@ -312,12 +317,15 @@ int main(int argc, char **argv) {
 		else {
 			// ------------------------------------------------------------------------
 			// sending half
+			printf("retval == 0\n");
 			if (sequenceNum >= window + windowStart) {
+				printf("resending\n");
 				int buffIndex;
 				windowDone = 1;
 				for (buffIndex = 0; buffIndex < window; buffIndex++) {	
 					if (buffer[buffIndex] != NULL) {
 						if (buffTimer[buffIndex] <= getTimeMS()) {
+							printf("timeout\n");
 							numLost++;
 							if (buffTOCount[buffIndex] >= 5) {
 								free(buffer[buffIndex]);
@@ -356,6 +364,7 @@ int main(int argc, char **argv) {
 				}
 				else {
 					// Create DATA packet
+					printf("create data pkt\n");
 					pkt = malloc(sizeof(struct packet));
 					bzero(pkt, sizeof(struct packet));
 					pkt->type = 'D';
@@ -367,6 +376,7 @@ int main(int argc, char **argv) {
 					bzero(buf, payloadLen);
 					fread(buf, 1, payloadLen, file); // TODO: check return value
 					memcpy(pkt->payload, buf, sizeof(buf));
+					printf("set buffer\n");
 					buffer[pkt->seq - start] = pkt;
 					buffTimer[pkt->seq - start] = timeout + getTimeMS();
 					buffTOCount[pkt->seq - start] = 0;
@@ -381,6 +391,7 @@ int main(int argc, char **argv) {
 					printf("len  : %lu\n", pkt->len);
 					printf("payload: %s\n\n", pkt->payload);
 					*/
+					printf("done pkt set\n");
 				}
 				tv->tv_usec = 1000 * sendRate;
 			}
@@ -395,6 +406,7 @@ int main(int argc, char **argv) {
 			}
 			// Send the packet to the requester 
 			if (pkt != NULL) {
+				printf("setup send pkt\n");
 				bzero(spkt, sizeof(struct ip_packet));
 				spkt->src = sIpAddr;
 				spkt->srcPort = senderPort;
@@ -402,7 +414,9 @@ int main(int argc, char **argv) {
 				spkt->destPort = requesterPort;
 				spkt->priority = priority;
 				spkt->length = HEADER_SIZE + pkt->len;
+				printf("memcpy to send\n");
 				memcpy(spkt->payload, pkt, sizeof(struct packet));
+				printf("send\n");
 				sendIpPacketTo(sockfd, spkt, (struct sockaddr *)esp->ai_addr);
 				numSent++;
 				pkt = NULL;

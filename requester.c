@@ -141,21 +141,13 @@ int main(int argc, char **argv) {
     for(esp = emulinfo; esp != NULL; esp = esp->ai_next) {
         // Try to create a new socket
         esockfd = socket(esp->ai_family, esp->ai_socktype, esp->ai_protocol);
-        if (sockfd == -1) {
+        if (esockfd == -1) {
             perror("Socket error");
             continue;
         }
-
-        // Try to bind the socket
-        if (bind(sockfd, esp->ai_addr, esp->ai_addrlen) == -1) {
-            perror("Bind error");
-            close(sockfd);
-            continue;
-        }
-
         break;
     }
-    if (esp == NULL) perrorExit("Send socket creation failed");
+    if (esp == NULL) perrorExit("emul socket creation failed");
     else            printf("emul socket created.\n");
 	
 	close(esockfd);

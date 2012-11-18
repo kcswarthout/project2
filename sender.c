@@ -226,7 +226,9 @@ int main(int argc, char **argv) {
             fprintf(stderr, "Failed/incomplete receive: ignoring\n");
             continue;
         }
-
+		else {
+			printf("received");
+		}
         // Deserialize the message into a ip_packet 
         struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
         bzero(pkt, sizeof(struct ip_packet));

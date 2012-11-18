@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
             size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
                 (struct sockaddr *)&emulAddr, &len);
             if (bytesRecvd == -1) perrorExit("Receive error");
-    
+			printf("received\n");
             // Deserialize the message into a packet
             rpkt = malloc(sizeof(struct ip_packet));
             bzero(rpkt, sizeof(struct ip_packet));
@@ -271,6 +271,7 @@ int main(int argc, char **argv) {
 			drpkt = (struct packet *)rpkt->payload;
 			
 			if (rpkt->dest != rIpAddr || rpkt->destPort != requesterPort) {
+				printf("ip mismatch\n");
 				continue;
 			}
 			
@@ -315,6 +316,22 @@ int main(int argc, char **argv) {
 					}
 					start += window;
 				}
+					
+				pkt = malloc(sizeof(struct ip_packet));
+				bzero(pkt, sizeof(struct ip_packet));
+				dpkt = (struct packet *)pkt->payload;
+				dpkt->type = 'A';
+				dpkt->seq  = drpkt->seq;
+				dpkt->len  = window;
+				pkt->src = rIpAddr;
+				pkt->srcPort = requesterPort;
+				pkt->dest = rpkt->src;
+				pkt->destPort = rpkt->srcPort;
+				pkt->priority = HIGH_PRIORITY;
+				pkt->length = HEADER_SIZE;
+				
+				sendIpPacketTo(sockfd, pkt, esp->ai_addr);
+				free(rpkt);
             }
     
             // Handle END packet
@@ -346,21 +363,6 @@ int main(int argc, char **argv) {
 				}
                 break;
             }
-			pkt = malloc(sizeof(struct ip_packet));
-			bzero(pkt, sizeof(struct ip_packet));
-			dpkt = (struct packet *)pkt->payload;
-			dpkt->type = 'A';
-			dpkt->seq  = drpkt->seq;
-			dpkt->len  = window;
-			pkt->src = rIpAddr;
-			pkt->srcPort = requesterPort;
-			pkt->dest = rpkt->src;
-			pkt->destPort = rpkt->srcPort;
-			pkt->priority = HIGH_PRIORITY;
-			pkt->length = HEADER_SIZE;
-   
-			sendIpPacketTo(sockfd, pkt, esp->ai_addr);
-			free(rpkt);
         }
         part = part->next_part;
         free(pkt);

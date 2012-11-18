@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
         struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
         bzero(pkt, sizeof(struct ip_packet));
         deserializeIpPacket(msg, pkt);
-		struct *dpkt = (struct packet *)pkt->payload;
+		struct packet *dpkt = (struct packet *)pkt->payload;
 
         // Check for REQUEST packet
         if (dpkt->type == 'R') {

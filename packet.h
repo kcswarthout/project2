@@ -15,6 +15,8 @@ struct packet {
     char payload[MAX_PAYLOAD];
 } __attribute__((packed));
 
+#define PACKET_SIZE sizeof(struct packet)
+
 struct ip_packet {
 	unsigned char priority;
 	unsigned long src;
@@ -22,11 +24,11 @@ struct ip_packet {
 	unsigned long dest;
 	unsigned int destPort;
 	unsigned long length;
-	struct packet *payload;
+	char payload[PACKET_SIZE];
 } __attribute__((packed));
 
+
 #define IP_PACKET_SIZE sizeof(struct ip_packet)
-#define PACKET_SIZE sizeof(struct packet)
 #define HEADER_SIZE ((2 * sizeof(long)) + sizeof(char))
 #define IP_HEADER_SIZE ((3 * sizeof(long)) + (2 * sizeof(int)) + sizeof(char))
 

@@ -231,16 +231,17 @@ int main(int argc, char **argv) {
         struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
         bzero(pkt, sizeof(struct ip_packet));
         deserializeIpPacket(msg, pkt);
+		struct *dpkt = (struct packet *)pkt->payload;
 
         // Check for REQUEST packet
-        if (pkt->payload->type == 'R') {
+        if (dpkt->type == 'R') {
             // Print some statistics for the recvd packet
             printf("<- [Received REQUEST]: ");
-            printPacketInfo(pkt->payload, (struct sockaddr_storage *)esp->ai_addr);
+            printPacketInfo(dpkt, (struct sockaddr_storage *)esp->ai_addr);
 
             // Grab a copy of the filename
-            filename = strdup(pkt->payload->payload);
-			window = pkt->payload->len;
+            filename = strdup(dpkt->payload);
+			window = dpkt->len;
             // Cleanup packets
             free(pkt);
             free(msg);
@@ -301,8 +302,10 @@ int main(int argc, char **argv) {
 			// Deserialize the message into a packet 
 			bzero(spkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, spkt);
-			free(buffer[spkt->payload->seq - start]);
-			buffer[spkt->payload->seq - start] = NULL;
+			pkt = (struct packet *)spkt->payload;
+			free(buffer[pkt->seq - start]);
+			buffer[pkt->seq - start] = NULL;
+			pkt = NULL;
 		}
 		else {
 			// ------------------------------------------------------------------------

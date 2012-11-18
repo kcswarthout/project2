@@ -210,13 +210,17 @@ int main(int argc, char **argv) {
         // Construct a REQUEST packet
 		printf("request packet constructing\n");
 		struct ip_packet *pkt = NULL;
+		struct packet *dpkt = NULL;
         pkt = malloc(sizeof(struct ip_packet));
         bzero(pkt, sizeof(struct ip_packet));
-        pkt->payload->type = 'R';
-        pkt->payload->seq  = 0;
-        pkt->payload->len  = window;
+		dpkt = malloc(sizeof(struct packet));
+        bzero(dpkt, sizeof(struct packet));
+        dpkt->type = 'R';
+        dpkt->seq  = 0;
+        dpkt->len  = window;
 		printf("cpy pkt to ip pkt\n");
         strcpy(pkt->payload->payload, fileOption);
+		memcpy(pkt->payload, dpkt, sizeof(struct packet));
 		pkt->src = rIpAddr;
 		pkt->srcPort = requesterPort;
 		pkt->dest = sIpAddr;
@@ -227,7 +231,7 @@ int main(int argc, char **argv) {
         sendIpPacketTo(sockfd, pkt, esp->ai_addr);
     
         free(pkt);
-    
+		free(dpkt);
         // Create the file to write data to
         if (access(fileOption, F_OK) != -1) // if it already exists
             remove(fileOption);             // delete it
@@ -248,6 +252,7 @@ int main(int argc, char **argv) {
 		struct packet **buffer = malloc(window * (sizeof (void *)));
 		unsigned long start = 1;
 		struct ip_packet *rpkt;
+		struct packet *drpkt;
         // Start a recv loop here to get all packets for the given part
 		printf("recv loop\n");
         for (;;) {
@@ -263,16 +268,17 @@ int main(int argc, char **argv) {
             rpkt = malloc(sizeof(struct ip_packet));
             bzero(rpkt, sizeof(struct ip_packet));
             deserializeIpPacket(msg, rpkt);
+			drpkt = (struct packet *)rpkt->payload;
 			
 			if (rpkt->dest != rIpAddr || rpkt->destPort != requesterPort) {
 				continue;
 			}
 			
             // Handle DATA packet
-            if (rpkt->payload->type == 'D') {
+            if (drpkt->type == 'D') {
                 // Update statistics
                 ++numPacketsRecvd;
-                numBytesRecvd += rpkt->payload->len;
+                numBytesRecvd += drpkt->len;
 
                 /* FOR DEBUG
                 printf("[Packet Details]\n------------------\n");
@@ -287,20 +293,20 @@ int main(int argc, char **argv) {
                 //printPacketInfo(rpkt->payload, (struct sockaddr_storage *)&emulAddr);
     
                 // Save the data to a buffer
-				if ( rpkt->payload->seq - start < window) {
-					buffer[rpkt->payload->seq - start] =  malloc(sizeof(struct packet));
-					memcpy(buffer[rpkt->payload->seq - start], rpkt->payload, sizeof(struct packet));
-					buffer[rpkt->payload->seq - start] = rpkt->payload;
+				if ( drpkt->seq - start < window) {
+					buffer[drpkt->seq - start] =  malloc(sizeof(struct packet));
+					memcpy(buffer[drpkt->seq - start], drpkt, sizeof(struct packet));
+					buffer[drpkt->seq - start] = drpkt;
 				}
 				else {
 					int i;
 					for (i = 0; i < window; i++) {
 						if (buffer[i] != NULL) {
-							size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
-							if (bytesWritten != rpkt->payload->len) {
+							size_t bytesWritten = fprintf(file, "%s", drpkt->payload);
+							if (bytesWritten != drpkt->len) {
 								fprintf(stderr,
 									"Incomplete file write: %d bytes written, %lu pkt len",
-									(int)bytesWritten, rpkt->payload->len);
+									(int)bytesWritten, drpkt->len);
 							} else {
 								fflush(file);
 							}
@@ -312,7 +318,7 @@ int main(int argc, char **argv) {
             }
     
             // Handle END packet
-            if (rpkt->payload->type == 'E') {
+            if (drpkt->type == 'E') {
                 printf("<- *** [Received END packet] ***");
                 double dt = difftime(time(NULL), startTime);
                 if (dt <= 1) dt = 1;
@@ -327,11 +333,11 @@ int main(int argc, char **argv) {
 				int i;
 				for (i = 0; i < window; i++) {
 					if (buffer[i] != NULL) {
-						size_t bytesWritten = fprintf(file, "%s", rpkt->payload->payload);
-						if (bytesWritten != rpkt->payload->len) {
+						size_t bytesWritten = fprintf(file, "%s", drpkt->payload);
+						if (bytesWritten != drpkt->len) {
 							fprintf(stderr,
 								"Incomplete file write: %d bytes written, %lu pkt len",
-								(int)bytesWritten, rpkt->payload->len);
+								(int)bytesWritten, drpkt->len);
 						} else {
 							fflush(file);
 						}
@@ -342,9 +348,10 @@ int main(int argc, char **argv) {
             }
 			pkt = malloc(sizeof(struct ip_packet));
 			bzero(pkt, sizeof(struct ip_packet));
-			pkt->payload->type = 'A';
-			pkt->payload->seq  = rpkt->payload->seq;
-			pkt->payload->len  = window;
+			dpkt = (struct packet *)pkt->payload;
+			dpkt->type = 'A';
+			dpkt->seq  = drpkt->seq;
+			dpkt->len  = window;
 			pkt->src = rIpAddr;
 			pkt->srcPort = requesterPort;
 			pkt->dest = rpkt->src;

@@ -47,8 +47,7 @@ void *serializeIpPacket(struct ip_packet *p) {
 	pkt->dest  = htonl(p->dest);
 	pkt->destPort  = htons(p->destPort);
     pkt->length  = htonl(p->length);
-	serializePacket(p->payload);
-	memcpy(pkt->payload, p->payload, sizeof(struct packet));
+	memcpy(pkt->payload, serializePacket((struct packet *)p->payload), sizeof(struct packet));
     return pkt;
 }
 
@@ -86,7 +85,7 @@ void deserializeIpPacket(void *msg, struct ip_packet *pkt) {
 	pkt->dest  = ntohl(p->dest);
 	pkt->destPort  = ntohs(p->destPort);
     pkt->length  = ntohl(p->length);
-	deserializePacket(p->payload, pkt->payload);
+	deserializePacket(p->payload, (struct packet *)pkt->payload);
 }
 
 void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr) {

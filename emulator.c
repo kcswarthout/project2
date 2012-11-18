@@ -136,6 +136,7 @@ int main(int argc, char **argv) {
     int retval = 0;
 	int i;
 	struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
+	struct packet *dpkt;
 	void *msg = malloc(sizeof(struct ip_packet));
     for (;;) {
 		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
@@ -156,11 +157,12 @@ int main(int argc, char **argv) {
 			pkt = malloc(sizeof(struct ip_packet));
 			bzero(pkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, pkt);
+			dpkt = (struct packet *)pkt->payload;
 			if (shouldForward(pkt))	{
 				for (i = 0; i < 3; i++) {
 					if (pkt->priority == priority[i]) {
 						if (queueFull[i]) {
-							if (pkt->payload->type == 'E') {
+							if (dpkt->type == 'E') {
 								ePktTail[i]->pkt = pkt;
 								ePktTail[i]->nextPkt = malloc(sizeof(struct end_packet_list));
 								ePktTail[i] = ePktTail[i]->nextPkt;
@@ -200,7 +202,8 @@ int main(int argc, char **argv) {
 			if (currPkt != NULL) {
 				int lossChance = currEntry->lossChance;
 				// Determine if packet should be dropped
-				if (currPkt->payload->type == 'E') {
+				dpkt = (struct packet *)currPkt->payload;
+				if (dpkt->type == 'E') {
 					lossChance = 0;
 				}
 				if (lossChance > rand() % 100) {

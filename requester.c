@@ -215,6 +215,7 @@ int main(int argc, char **argv) {
         pkt->payload->type = 'R';
         pkt->payload->seq  = 0;
         pkt->payload->len  = window;
+		printf("cpy pkt to ip pkt\n");
         strcpy(pkt->payload->payload, fileOption);
 		pkt->src = rIpAddr;
 		pkt->srcPort = requesterPort;
@@ -222,7 +223,7 @@ int main(int argc, char **argv) {
 		pkt->destPort = part->sender_port;
 		pkt->priority = HIGH_PRIORITY;
 		pkt->length = HEADER_SIZE + strlen(fileOption) + 1;
-    
+		printf("send r pkt\n");
         sendIpPacketTo(sockfd, pkt, esp->ai_addr);
     
         free(pkt);
@@ -243,6 +244,7 @@ int main(int argc, char **argv) {
         struct sockaddr_storage emulAddr;
         bzero(&emulAddr, sizeof(struct sockaddr_storage));
         socklen_t len = sizeof(emulAddr);
+		printf("buffer\n");
 		struct packet **buffer = malloc(window * (sizeof (void *)));
 		unsigned long start = 1;
 		struct ip_packet *rpkt;

@@ -113,6 +113,7 @@ void sendIpPacketTo(int sockfd, struct ip_packet *pkt, struct sockaddr *addr) {
     size_t bytesSent = sendto(sockfd, spkt, IP_PACKET_SIZE,
                               0, addr, sizeof *addr);
 
+			
     if (bytesSent == -1) {
         perror("Sendto error");
         fprintf(stderr, "Error sending packet\n");

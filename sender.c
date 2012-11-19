@@ -369,11 +369,11 @@ int main(int argc, char **argv) {
 					tv->tv_usec = 0;
 					tv->tv_sec = 0;
 				}
-				else if (timeoutEnd > getTimeMS() && timeoutEnd < getTimeMS() + 10000000) {
+				else if ((timeoutEnd > getTimeMS()) && (timeoutEnd < getTimeMS() + 10000000)) {
 					tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000000);
 					tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
 				}
-				}
+				
 				timeoutEnd = 1000000000 + getTimeMS();
 			}
 			else if (!fileDone) {

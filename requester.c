@@ -152,6 +152,10 @@ int main(int argc, char **argv) {
     if (esp == NULL) perrorExit("emul socket creation failed");
     else            printf("emul socket created.\n");
 	
+	
+	tmp = (struct sockaddr_in *)esp->ai_addr;
+	unsigned long eIpAddr = ntohl(tmp->sin_addr.s_addr);
+	printf("req ip %s      %lu\n", inet_ntoa(tmp->sin_addr), eIpAddr);
 	close(esockfd);
 	
     // ------------------------------------------------------------------------
@@ -199,8 +203,8 @@ int main(int argc, char **argv) {
         close(sendsockfd); // don't need this socket
 		
 		tmp = (struct sockaddr_in *)sp->ai_addr;
-		sIpAddr = tmp->sin_addr.s_addr;
-		printf("send ip %lu\n", rIpAddr);
+		sIpAddr = ntohl(tmp->sin_addr.s_addr);
+		printf("req ip %s      %lu\n", inet_ntoa(tmp->sin_addr), rIpAddr);
         // ------------------------------------------------------------------------
     
         // Setup variables for statistics

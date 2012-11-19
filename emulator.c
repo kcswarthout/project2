@@ -292,7 +292,7 @@ int main(int argc, char **argv) {
 						ePktList[i] = ePktList[i]->nextPkt;
 					}
 					currEntry = nextHop(currPkt, nextSock);
-					printf("delay %u   %l   %l\n",currEntry->delay, (long)currEntry->delay / 1000, (long)(currEntry->delay % 1000) * 1000000);
+					printf("delay %u   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
 					tv->tv_sec = (long)currEntry->delay / 1000;
 					tv->tv_nsec = (long)(currEntry->delay % 1000) * 1000000;
 				}

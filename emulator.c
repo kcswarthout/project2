@@ -149,6 +149,7 @@ int main(int argc, char **argv) {
 	tv->tv_nsec = 0;
     int retval = 0;
 	int i;
+	int numRecv = 0;
 	struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
 	struct packet *dpkt;
 	unsigned long long start = getTimeMS();
@@ -176,7 +177,7 @@ int main(int argc, char **argv) {
 				sec--;
 				
 			}
-			if (sec < 0) {
+			if (sec < 0 || !numRecv) {
 					sec = 0;
 					nsec = 0;
 			}
@@ -190,12 +191,14 @@ int main(int argc, char **argv) {
 				fprintf(stderr, "Failed/incomplete receive: ignoring\n");
 				continue;
 			}
+			
 			// Deserialize the message into a packet 
 			pkt = malloc(sizeof(struct ip_packet));
 			bzero(pkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, pkt);
 			dpkt = (struct packet *)pkt->payload;
 			if (shouldForward(pkt))	{
+				numRecv++;
 				for (i = 0; i < 3; i++) {
 					if (pkt->priority == priority[i]) {
 						if (queueFull[i]) {

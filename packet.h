@@ -46,6 +46,6 @@ void sendPacketTo(int sockfd, struct packet *pkt, struct sockaddr *addr);
 void sendIpPacketTo(int sockfd, struct ip_packet *pkt, struct sockaddr *addr);
 
 void printPacketInfo(struct packet *pkt, struct sockaddr_storage *saddr);
-
+void printIpPacketInfo(struct ip_packet *pkt, struct sockaddr_storage *saddr);
 #endif
 

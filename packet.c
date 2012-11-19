@@ -160,7 +160,7 @@ void printIpPacketInfo(struct ip_packet *pkt, struct sockaddr_storage *saddr) {
         return;
     }
 	printf("Pri %hhu : Sz %lu : Dst %lu %iu : Src %lu %iu", pkt->priority, 
-			pkt->length, addrToName(pkt->dest), pkt->destPort, addrToName(pkt->src), pkt->srcPort);
+			pkt->length, pkt->dest, pkt->destPort, pkt->src, pkt->srcPort);
 	
 	printPacketInfo((struct packet *)pkt->payload, saddr);
     /*

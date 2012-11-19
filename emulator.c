@@ -295,6 +295,7 @@ int main(int argc, char **argv) {
 					printf("delay %u   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
 					tv->tv_sec = (long)currEntry->delay / 1000;
 					tv->tv_nsec = (long)(currEntry->delay % 1000) * 1000000;
+					break;
 				}
 			}
 			if (i == 3) {

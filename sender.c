@@ -359,7 +359,7 @@ int main(int argc, char **argv) {
 							windowDone = 0;
 						}
 						if (timeoutEnd > buffTimer[buffIndex]) {
-						printf("timeoutend = %li  %lu  %llu", (long)(buffTimer[buffIndex] - getTimeMS()), (long unsigned)(buffTimer[buffIndex] - getTimeMS()), buffTimer[buffIndex] - getTimeMS());
+						printf("timeoutend = %li  %lu  %llu", (long)((1000 * (buffTimer[buffIndex] - getTimeMS())) % 1000000), (long unsigned)(buffTimer[buffIndex] - getTimeMS()), buffTimer[buffIndex] - getTimeMS());
 							timeoutEnd = buffTimer[buffIndex];
 						}
 					}
@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
 					windowStart += window;
 				}
 				else if ((1000 / sendRate) < (timeoutEnd - getTimeMS())) { 
-					tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000);
+					tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000000);
 					tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
 				}
 				else {

@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
 		if (retval > 0) {
 			// Receive a message
 			tv->tv_nsec -= (long)(1000000 * (getTimeMS() - start));
-			tv-tv_sec = 0;
+			tv->tv_sec = 0;
 			printf("retval > 0\n");
 			bzero(msg, sizeof(struct ip_packet));
 			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, NULL, NULL);

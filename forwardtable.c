@@ -80,7 +80,7 @@ int parseFile(const char *filename, char *hostname, unsigned int port) {
     if (bytesRead == -1) perrorExit("Getline error");
     while (bytesRead != -1) { 
         // Tokenize line
-        int n = -1; // TODO: should this be 0 or -1?
+        int n = 0; // TODO: should this be 0 or -1?
         char *tokens[TOK_PER_LINE];
         char *tok = strtok(line, " ");
         while (tok != NULL) {

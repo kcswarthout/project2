@@ -23,7 +23,7 @@
 int main(int argc, char **argv) {
     // ------------------------------------------------------------------------
     // Handle commandline arguments
-    if (argc < 11) {
+    if (argc < 9) {
         printf("usage: emul -p <port> -g <requester port> ");
         printf("-r <rate> -q <seq_no> -l <length>\n");
         exit(1);

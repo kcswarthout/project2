@@ -86,8 +86,12 @@ int main(int argc, char **argv) {
     rhints.ai_flags    = AI_PASSIVE;
 
     // Get the requester's address info
+	char hostname[256];
+	hostname[255] = '\0';
+	gethostname(hostname, 255);
+
     struct addrinfo *requesterinfo;
-    int errcode = getaddrinfo(NULL, portStr, &rhints, &requesterinfo);
+    int errcode = getaddrinfo(hostname, portStr, &rhints, &requesterinfo);
     if (errcode != 0) {
         fprintf(stderr, "requester getaddrinfo: %s\n", gai_strerror(errcode));
         exit(EXIT_FAILURE);
@@ -155,7 +159,7 @@ int main(int argc, char **argv) {
 	
 	tmp = (struct sockaddr_in *)esp->ai_addr;
 	unsigned long eIpAddr = ntohl(tmp->sin_addr.s_addr);
-	printf("req ip %s      %lu\n", inet_ntoa(tmp->sin_addr), eIpAddr);
+	printf("emul ip %s      %lu\n", inet_ntoa(tmp->sin_addr), eIpAddr);
 	close(esockfd);
 	
     // ------------------------------------------------------------------------
@@ -204,7 +208,7 @@ int main(int argc, char **argv) {
 		
 		tmp = (struct sockaddr_in *)sp->ai_addr;
 		sIpAddr = ntohl(tmp->sin_addr.s_addr);
-		printf("req ip %s      %lu\n", inet_ntoa(tmp->sin_addr), rIpAddr);
+		printf("send ip %s      %lu\n", inet_ntoa(tmp->sin_addr), sIpAddr);
         // ------------------------------------------------------------------------
     
         // Setup variables for statistics

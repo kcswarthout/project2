@@ -335,7 +335,7 @@ int main(int argc, char **argv) {
 				buffer[drpkt->seq - start] = drpkt;
 					
 					
-				pkt = malloc(sizeof(struct ip_packet));
+				/*pkt = malloc(sizeof(struct ip_packet));
 				bzero(pkt, sizeof(struct ip_packet));
 				dpkt = (struct packet *)pkt->payload;
 				dpkt->type = 'A';
@@ -346,10 +346,33 @@ int main(int argc, char **argv) {
 				pkt->dest = rpkt->src;
 				pkt->dest = sIpAddr;
 				pkt->destPort = part->sender_port;
-				pkt->length = HEADER_SIZE;
+				pkt->length = HEADER_SIZE;*/
 				
 				sendIpPacketTo(sockfd, pkt, esp->ai_addr);
+				
+				pkt = malloc(sizeof(struct ip_packet));
+				bzero(pkt, sizeof(struct ip_packet));
+				dpkt = malloc(sizeof(struct packet));
+				bzero(dpkt, sizeof(struct packet));
+				dpkt->type = 'A';
+				dpkt->seq  = drpkt->seq;
+				dpkt->len  = 0;
+				printf("cpy pkt to ip pkt\n");
+				dkpt->payload[0] = '\0';
+				memcpy(pkt->payload, dpkt, sizeof(struct packet));
+				pkt->src = rIpAddr;
+				pkt->srcPort = requesterPort;
+				pkt->dest = sIpAddr;
+				pkt->destPort = part->sender_port;
+				pkt->priority = HIGH_PRIORITY;
+				pkt->length = HEADER_SIZE;
+				printf("send a pkt\n");
+				sendIpPacketTo(sockfd, pkt, esp->ai_addr);
+				
 				free(rpkt);
+    
+				free(pkt);
+				free(dpkt);
             }
     
             // Handle END packet
@@ -383,8 +406,6 @@ int main(int argc, char **argv) {
             }
         }
         part = part->next_part;
-        free(pkt);
-		free(rpkt);
         freeaddrinfo(senderinfo);
     }
 

@@ -297,7 +297,7 @@ int main(int argc, char **argv) {
 	int x = 0;
     while (loopCont) {
 		if (x < 20) {
-			printf("loop%d  delay=%l s   %l us\n", x, tv->tv_sec, tv->tv_usec);
+			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_usec);
 			x++;
 		}
 		else {break;};

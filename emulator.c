@@ -102,11 +102,22 @@ int main(int argc, char **argv) {
             perror("Socket error");
             continue;
         }
+		
+		// Try to bind the socket
+        if (bind(sockfd, sp->ai_addr, sp->ai_addrlen) == -1) {
+            perror("Bind error");
+            close(sockfd);
+            continue;
+        }
+		
         break;
     }
     if (sp == NULL) perrorExit("Send socket creation failed");
     else            printf("emul socket created.\n");
 
+	/*struct sockaddr_in *tmp = (struct sockaddr_in *)sp->ai_addr;
+	unsigned long eIpAddr = tmp->sin_addr.s_addr;*/
+	
 	parseFile(filename, emulPort);
 	
 	

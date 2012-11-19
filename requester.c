@@ -368,8 +368,7 @@ int main(int argc, char **argv) {
 				pkt->priority = HIGH_PRIORITY;
 				pkt->length = HEADER_SIZE;
 				printf("send a pkt\n");
-				int r = sendIpPacketTo(sockfd, pkt, esp->ai_addr);
-				printf("r");
+				sendIpPacketTo(sockfd, pkt, esp->ai_addr);
 				free(rpkt);
     
 				free(pkt);

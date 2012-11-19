@@ -154,3 +154,22 @@ void printPacketInfo(struct packet *pkt, struct sockaddr_storage *saddr) {
     */
 }
 
+void printIpPacketInfo(struct ip_packet *pkt, struct sockaddr_storage *saddr) {
+    if (pkt == NULL) {
+        fprintf(stderr, "Unable to print info for null packet\n");
+        return;
+    }
+	printf("Pri %hhu : Sz %lu : Dst %s %iu : Src %s %iu", pkt->priority, 
+			pkt->length, addrToName(pkt->dest), pkt->destPort, addrToName(pkt->src), pkt->srcPort);
+	
+	printPacketInfo((struct ip_packet *)pkt->payload, saddr);
+    /*
+    printf("  Packet from %s:%u (%lu payload bytes):\n",ipstr,ipport,pkt->len);
+    printf("    type = %c\n", pkt->type);
+    printf("    seq  = %lu\n", pkt->seq);
+    printf("    len  = %lu\n", pkt->len);
+    printf("    data = %s\n", pkt->payload);
+    puts("");
+    */
+}
+

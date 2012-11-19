@@ -263,13 +263,14 @@ int main(int argc, char **argv) {
             size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
                 (struct sockaddr *)&emulAddr, &len);
             if (bytesRecvd == -1) perrorExit("Receive error");
-			printf("received\n");
+			printf("received");
             // Deserialize the message into a packet
             rpkt = malloc(sizeof(struct ip_packet));
             bzero(rpkt, sizeof(struct ip_packet));
             deserializeIpPacket(msg, rpkt);
 			drpkt = (struct packet *)rpkt->payload;
 			
+            printIpPacketInfo(rpkt, &emulAddr);
 			if (rpkt->dest != rIpAddr || rpkt->destPort != requesterPort) {
 				printf("ip mismatch\n");
 				continue;
@@ -280,7 +281,7 @@ int main(int argc, char **argv) {
                 // Update statistics
                 ++numPacketsRecvd;
                 numBytesRecvd += drpkt->len;
-
+				printf("<- *** [Received data packet] ***\n");
                 /* FOR DEBUG
                 printf("[Packet Details]\n------------------\n");
                 printf("type : %c\n", pkt->type);

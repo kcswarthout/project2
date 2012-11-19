@@ -239,13 +239,13 @@ int main(int argc, char **argv) {
         if (dpkt->type == 'R') {
             // Print some statistics for the recvd packet
             printf("<- [Received REQUEST]: ");
-            printPacketInfo(dpkt, (struct sockaddr_storage *)esp->ai_addr);
+            printIpPacketInfo(pkt, (struct sockaddr_storage *)esp->ai_addr);
 
             // Grab a copy of the filename
             filename = strdup(dpkt->payload);
 			window = dpkt->len;
 			rIpAddr = pkt->src;
-			printf("window: %d", dpkt->len);
+			printf("window: %lu", dpkt->len);
             // Cleanup packets
             free(pkt);
             free(msg);
@@ -276,7 +276,7 @@ int main(int argc, char **argv) {
 	printf("tv and fd set\n");
 	int numSent = 0;
 	int numLost = 0;
-	int windowStart = 1;
+	unsigned long windowStart = 1;
 	int windowDone = 1;
 	int fileDone = 0;
 	int loopCont = 1;
@@ -312,6 +312,7 @@ int main(int argc, char **argv) {
 			bzero(spkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, spkt);
 			pkt = (struct packet *)spkt->payload;
+			printf("free buffer b/c ack\n");
 			free(buffer[pkt->seq - windowStart]);
 			buffer[pkt->seq - windowStart] = NULL;
 			pkt = NULL;
@@ -326,11 +327,14 @@ int main(int argc, char **argv) {
 				windowDone = 1;
 				for (buffIndex = 0; buffIndex < window; buffIndex++) {	
 					if (buffer[buffIndex] != NULL) {
+						printf("check buffer b/c timeout%d\n", buffIndex);
 						if (buffTimer[buffIndex] <= getTimeMS()) {
 							printf("timeout\n");
 							numLost++;
 							if (buffTOCount[buffIndex] >= 5) {
+								printf("free buffer\n");
 								free(buffer[buffIndex]);
+								
 								buffer[buffIndex] = NULL;
 							}
 							else {
@@ -379,7 +383,7 @@ int main(int argc, char **argv) {
 					bzero(buf, payloadLen);
 					fread(buf, 1, payloadLen, file); // TODO: check return value
 					memcpy(pkt->payload, buf, sizeof(buf));
-					printf("set buffer\n");
+					printf("set buffer%lu w/ pkt%lu\n", pkt->seq - windowStart, pkt->seq);
 					buffer[pkt->seq - windowStart] = pkt;
 					buffTimer[pkt->seq - windowStart] = timeout + getTimeMS();
 					buffTOCount[pkt->seq - windowStart] = 0;

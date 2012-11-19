@@ -92,7 +92,7 @@ unsigned long nameToAddr(char *name) {
     close(sockfd); // don't need this socket
 	
     struct sockaddr_in *ip = (struct sockaddr_in *)info->ai_addr;
-	unsigned long addr = ip->sin_addr.s_addr;
+	unsigned long addr = ntohl(ip->sin_addr.s_addr);
 	return addr;
 }
 

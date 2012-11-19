@@ -289,7 +289,7 @@ int main(int argc, char **argv) {
 	unsigned long long *buffTimer = malloc(window * (sizeof (int)));
 	int *buffTOCount = malloc(window * (sizeof (int)));
     //unsigned long long start = getTimeMS();
-	unsigned long long timeoutEnd = 1000000000 + getTimeMS();
+	unsigned long long timeoutEnd = getTimeMS();
     struct packet *pkt;
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
 	struct ip_packet *msg = malloc(sizeof(struct ip_packet));
@@ -333,6 +333,16 @@ int main(int argc, char **argv) {
 			// sending half
 			printf("retval == 0\n");
 			if (sequenceNum >= window + windowStart) {
+				if ( timeoutEnd > getTimeMS()) {
+					if ( timeoutEnd > getTimeMS() + (1000 / sendRate)) {
+						tv->tv_usec = (1000 * 1000) / sendRate;
+					}
+					else {
+						tv->tv_usec = (long)(1000 * (timeoutEnd - getTimeMS()));
+					}
+					tv->tv_sec = (long) 0;
+					break;
+				}
 				printf("resending\n");
 				windowDone = 1;
 				for (buffIndex = 0; buffIndex < window; buffIndex++) {	
@@ -359,7 +369,6 @@ int main(int argc, char **argv) {
 							windowDone = 0;
 						}
 						if (timeoutEnd > buffTimer[buffIndex]) {
-						printf("timeoutend = %li  %lu  %llu", (long)((1000 * (buffTimer[buffIndex] - getTimeMS())) % 1000000), (long unsigned)(buffTimer[buffIndex] - getTimeMS()), buffTimer[buffIndex] - getTimeMS());
 							timeoutEnd = buffTimer[buffIndex];
 						}
 					}
@@ -369,12 +378,12 @@ int main(int argc, char **argv) {
 					tv->tv_usec = 0;
 					tv->tv_sec = 0;
 				}
-				else if ((timeoutEnd > getTimeMS()) && (timeoutEnd < getTimeMS() + 10000000)) {
+				/*else if ((timeoutEnd > getTimeMS()) && (timeoutEnd < getTimeMS() + 10000000)) {
 					tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000000);
 					tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
 				}
 				
-				timeoutEnd = 1000000000 + getTimeMS();
+				timeoutEnd = 1000000000 + getTimeMS();*/
 			}
 			else if (!fileDone) {
 				// Is file part finished?
@@ -427,7 +436,7 @@ int main(int argc, char **argv) {
 			// Send the packet to the requester 
 			if (pkt != NULL) {
 				tv->tv_usec = (1000 * 1000) / sendRate;
-				tv->tv_sec = 0;
+				tv->tv_sec = (long) 0;
 				printf("setup send pkt\n");
 				bzero(spkt, sizeof(struct ip_packet));
 				spkt->src = sIpAddr;

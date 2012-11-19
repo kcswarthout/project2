@@ -118,6 +118,7 @@ int main(int argc, char **argv) {
 	
 	struct sockaddr_in *tmp = (struct sockaddr_in *)rp->ai_addr;
 	unsigned long rIpAddr = tmp->sin_addr.s_addr;
+	printf("req ip %lu\n", rIpAddr);
 
 	// ------------------------------------------------------------------------
     // Setup emul address info 
@@ -198,7 +199,7 @@ int main(int argc, char **argv) {
 		
 		tmp = (struct sockaddr_in *)sp->ai_addr;
 		sIpAddr = tmp->sin_addr.s_addr;
-		
+		printf("send ip %lu\n", rIpAddr);
         // ------------------------------------------------------------------------
     
         // Setup variables for statistics

@@ -94,13 +94,13 @@ int parseFile(const char *filename, unsigned int port) {
 		hostname = malloc(len + 1);
 		hostname[len] = '\0';
 		gethostname(hostname, len);
-		printf("tokenized a line\n");
+		/*printf("tokenized a line\n");
 		printf("EMUL %d\n", EMULATOR);
 		printf("EMULPORT %d\n", EMUL_PORT);
 		printf("hostname %s\n", hostname);
 		printf("port %d\n", port);
 		printf("tok[em] %s\n", tokens[EMULATOR]);
-		printf("tok[empo] %s\n", tokens[EMUL_PORT]);
+		printf("tok[empo] %s\n", tokens[EMUL_PORT]);*/
         // Only process this line if it is for the specified emulator
         if (strcmp(tokens[EMULATOR], hostname) == 0 && atoi(tokens[EMUL_PORT]) == port) {
 			printf("for this emul\n");
@@ -120,7 +120,7 @@ int parseFile(const char *filename, unsigned int port) {
 			tmp = entry;
 			++size;
         }
-		printf("done with line, free\n");
+		
         // Get the next forward table line
         free(line);
         line = NULL;
@@ -151,7 +151,6 @@ int parseFile(const char *filename, unsigned int port) {
 		tmp = tmp->nextEntry;
 		free(rawTable);
 	}
-	free(rawTable);
     return 1; // success
 }
 

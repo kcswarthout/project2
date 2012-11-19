@@ -295,6 +295,7 @@ int main(int argc, char **argv) {
 				if ( (drpkt->seq - start) >= window) {
 					int i;
 					for (i = 0; i < window; i++) {
+						printf("Write: %s\n",  buffer[i]->payload);
 						if (buffer[i] != NULL) {
 							size_t bytesWritten = fprintf(file, "%s", buffer[i]->payload);
 							if (bytesWritten != buffer[i]->len) {
@@ -332,7 +333,6 @@ int main(int argc, char **argv) {
 					
 				buffer[drpkt->seq - start] =  malloc(sizeof(struct packet));
 				memcpy(buffer[drpkt->seq - start], drpkt, sizeof(struct packet));
-				buffer[drpkt->seq - start] = drpkt;
 					
 					
 				/*pkt = malloc(sizeof(struct ip_packet));
@@ -391,6 +391,7 @@ int main(int argc, char **argv) {
 				int i;
 				for (i = 0; i < window; i++) {
 					if (buffer[i] != NULL) {
+						printf("Write: %s\n",  buffer[i]->payload);
 						size_t bytesWritten = fprintf(file, "%s", buffer[i]->payload);
 						if (bytesWritten != buffer[i]->len) {
 							fprintf(stderr,

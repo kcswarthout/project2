@@ -260,6 +260,10 @@ int main(int argc, char **argv) {
         socklen_t len = sizeof(emulAddr);
 		printf("buffer\n");
 		struct packet **buffer = malloc(window * (sizeof (void *)));
+		int buffIndex;
+		for (buffIndex = 0; buffIndex < window; buffIndex++) {
+			buffer[buffIndex] = NULL;
+		}
 		unsigned long start = 1;
 		struct ip_packet *rpkt;
 		struct packet *drpkt;
@@ -305,10 +309,12 @@ int main(int argc, char **argv) {
                 //printPacketInfo(rpkt->payload, (struct sockaddr_storage *)&emulAddr);
     
                 // Save the data to a buffer
-				if ( drpkt->seq - start < window) {
-					buffer[drpkt->seq - start] =  malloc(sizeof(struct packet));
-					memcpy(buffer[drpkt->seq - start], drpkt, sizeof(struct packet));
-					buffer[drpkt->seq - start] = drpkt;
+				if ( (drpkt->seq - start) < window) {
+					if (buffer[drpkt->seq - start] != NULL) {
+						buffer[drpkt->seq - start] =  malloc(sizeof(struct packet));
+						memcpy(buffer[drpkt->seq - start], drpkt, sizeof(struct packet));
+						buffer[drpkt->seq - start] = drpkt;
+					}
 				}
 				else {
 					int i;
@@ -325,6 +331,9 @@ int main(int argc, char **argv) {
 							buffer[i] = NULL;
 						}
 					}
+					buffer[drpkt->seq - start] =  malloc(sizeof(struct packet));
+					memcpy(buffer[drpkt->seq - start], drpkt, sizeof(struct packet));
+					buffer[drpkt->seq - start] = drpkt;
 					start += window;
 				}
 					
@@ -337,8 +346,8 @@ int main(int argc, char **argv) {
 				pkt->src = rIpAddr;
 				pkt->srcPort = requesterPort;
 				pkt->dest = rpkt->src;
-				pkt->destPort = rpkt->srcPort;
-				pkt->priority = HIGH_PRIORITY;
+				pkt->dest = sIpAddr;
+				pkt->destPort = part->sender_port;
 				pkt->length = HEADER_SIZE;
 				
 				sendIpPacketTo(sockfd, pkt, esp->ai_addr);

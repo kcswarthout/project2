@@ -336,12 +336,13 @@ int main(int argc, char **argv) {
 							printf("timeout\n");
 							numLost++;
 							if (buffTOCount[buffIndex] >= 5) {
-								printf("free buffer\n");
+								printf("free buffer b/c timeout\n");
 								free(buffer[buffIndex]);
 								
 								buffer[buffIndex] = NULL;
 							}
 							else {
+								buffTimer[buffIndex] = getTimeMS() + timeout;
 								buffTOCount[buffIndex]++;
 								pkt = buffer[buffIndex];
 								windowDone = 0;
@@ -359,11 +360,11 @@ int main(int argc, char **argv) {
 				if (windowDone) {
 					windowStart += window;
 				}
-				else if ((1000 * sendRate) < (timeoutEnd - getTimeMS())) { 
-					tv->tv_usec = timeoutEnd - getTimeMS();
+				else if ((1000 / sendRate) < (timeoutEnd - getTimeMS())) { 
+					tv->tv_usec = 1000 * (timeoutEnd - getTimeMS());
 				}
 				else {
-					tv->tv_usec = 1000 * sendRate;
+					tv->tv_usec = 1000 * (1000 / sendRate);
 				}
 			}
 			else if (!fileDone) {

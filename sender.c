@@ -219,6 +219,14 @@ int main(int argc, char **argv) {
         bzero(msg, sizeof(struct ip_packet));
 
         // Receive a message
+		fd_set fds;
+		FD_ZERO(&fds);
+		FD_SET(sockfd, &fds);
+		struct timespec *tv = malloc(sizeof(struct timespec));
+		tv->tv_sec = 20;
+		tv->tv_nsec = 0;
+		int retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
+		printf("retval = %d", retval);
         size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
             (struct sockaddr *)esp->ai_addr, &esp->ai_addrlen);
         if (bytesRecvd == -1) {

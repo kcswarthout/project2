@@ -143,13 +143,14 @@ int main(int argc, char **argv) {
 	struct packet *dpkt;
 	unsigned long long start = getTimeMS();
 	void *msg = malloc(sizeof(struct ip_packet));
+	int x = 0;
     for (;;) {
 		if (x < 20) {
 			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
 			x++;
 		}
 		start = getTimeMS();
-		retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, null);
+		retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
 	
 		// ------------------------------------------------------------------------
 		// receiving half
@@ -259,7 +260,7 @@ int main(int argc, char **argv) {
 					}
 					currEntry = nextHop(currPkt, nextSock);
 					tv->tv_sec = currEntry->delay / 1000;
-					tv->tv_usec = (currEntry->delay % 1000) * 1000;
+					tv->tv_nsec = (currEntry->delay % 1000) * 1000000;
 				}
 			}
 		}

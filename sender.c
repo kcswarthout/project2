@@ -289,7 +289,7 @@ int main(int argc, char **argv) {
 	unsigned long long *buffTimer = malloc(window * (sizeof (int)));
 	int *buffTOCount = malloc(window * (sizeof (int)));
     //unsigned long long start = getTimeMS();
-	unsigned long long timeoutEnd = 10000000;
+	unsigned long long timeoutEnd = 1000000000 + getTimeMS();
     struct packet *pkt;
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
 	struct ip_packet *msg = malloc(sizeof(struct ip_packet));
@@ -338,7 +338,7 @@ int main(int argc, char **argv) {
 							if (buffTOCount[buffIndex] >= 5) {
 								printf("free buffer b/c timeout\n");
 								free(buffer[buffIndex]);
-								
+								buffTimer[buffIndex] = 1000000000 + getTimeMS();
 								buffer[buffIndex] = NULL;
 							}
 							else {
@@ -350,10 +350,10 @@ int main(int argc, char **argv) {
 							}
 						}
 						else {
-							if (timeoutEnd > buffTimer[buffIndex]) {
-								timeoutEnd = buffTimer[buffIndex];
-							}
 							windowDone = 0;
+						}
+						if (timeoutEnd > buffTimer[buffIndex]) {
+							timeoutEnd = buffTimer[buffIndex];
 						}
 					}
 				}
@@ -361,12 +361,13 @@ int main(int argc, char **argv) {
 					windowStart += window;
 				}
 				else if ((1000 / sendRate) < (timeoutEnd - getTimeMS())) { 
-					tv->tv_usec = 1000 * (timeoutEnd - getTimeMS());
+					tv->tv_usec = (1000 * (timeoutEnd - getTimeMS())) % 1000;
+					tv->tv_sec = (timeoutEnd - getTimeMS()) / 1000;
 				}
 				else {
 					tv->tv_usec = 1000 * (1000 / sendRate);
 				}
-				timeoutEnd = 10000000;
+				timeoutEnd = 1000000000 + getTimeMS();
 			}
 			else if (!fileDone) {
 				// Is file part finished?
@@ -406,7 +407,7 @@ int main(int argc, char **argv) {
 					*/
 					printf("done pkt set\n");
 				}
-				tv->tv_usec = 1000 * sendRate;
+				tv->tv_usec = 1000 * (1000 / sendRate);
 			}
 			else {
 				// Create END packet and send it

@@ -79,19 +79,23 @@ int parseFile(const char *filename, char *hostname, unsigned int port) {
     size_t bytesRead = getline(&line, &lineLen, file);
     if (bytesRead == -1) perrorExit("Getline error");
     while (bytesRead != -1) { 
+		printf("read a line\n");
         // Tokenize line
         int n = 0; // TODO: should this be 0 or -1?
         char *tokens[TOK_PER_LINE];
         char *tok = strtok(line, " ");
         while (tok != NULL) {
-            tokens[n++] = tok;
+            tokens[n] = tok;
             tok  = strtok(NULL, " ");
+			n++;
         }
-
+		printf("tokenized a line\n");
         // Only process this line if it is for the specified emulator
         if (strcmp(tokens[EMULATOR], hostname) == 0 && atoi(tokens[EMUL_PORT]) == port) {
+			printf("for this emul\n");
             struct raw_entry *entry = malloc(sizeof(struct raw_entry));
             bzero(entry, sizeof(struct raw_entry));
+			printf("malloced entry\n");
 			// TODO: type conversions likr atol or strtoul instead of atoi
             entry->dest         = strdup(tokens[DESTINATION]);
             entry->destPort     = atoi(tokens[DEST_PORT]);
@@ -99,13 +103,13 @@ int parseFile(const char *filename, char *hostname, unsigned int port) {
             entry->nextHopPort  = atoi(tokens[NEXT_HOP_PORT]);
             entry->delay 		= atoi(tokens[DELAY]);
             entry->lossChance 	= atoi(tokens[LOSS_CHANCE]);
-
+			printf("set fields\n");
             // Link it in to the list of raw_entries
             tmp->nextEntry = entry;
 			tmp = entry;
 			++size;
         }
-
+		printf("done with line, free\n");
         // Get the next forward table line
         free(line);
         line = NULL;

@@ -34,7 +34,7 @@ struct end_packet_list {
 //   a linked list of file_part structures that contain the location 
 //   and sequence information from the tracker for the specified file.
 // ----------------------------------------------------------------------------
-int parseFile(const char *filename, char *hostname, unsigned int port);
+int parseFile(const char *filename, unsigned int port);
 
 // ----------------------------------------------------------------------------
 struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket);

@@ -346,10 +346,11 @@ int main(int argc, char **argv) {
 				pkt->dest = rpkt->src;
 				pkt->dest = sIpAddr;
 				pkt->destPort = part->sender_port;
-				pkt->length = HEADER_SIZE;*/
+				pkt->length = HEADER_SIZE;
 				
-				sendIpPacketTo(sockfd, pkt, esp->ai_addr);
-				
+				sendIpPacketTo(sockfd, pkt, esp->ai_addr);*/
+				unsigned long long t = getTimeMS();
+				while (t == getTimeMS()){}
 				pkt = malloc(sizeof(struct ip_packet));
 				bzero(pkt, sizeof(struct ip_packet));
 				dpkt = malloc(sizeof(struct packet));
@@ -367,8 +368,8 @@ int main(int argc, char **argv) {
 				pkt->priority = HIGH_PRIORITY;
 				pkt->length = HEADER_SIZE;
 				printf("send a pkt\n");
-				sendIpPacketTo(sockfd, pkt, esp->ai_addr);
-				
+				int r = sendIpPacketTo(sockfd, pkt, esp->ai_addr);
+				printf("r");
 				free(rpkt);
     
 				free(pkt);

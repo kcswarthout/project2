@@ -359,6 +359,7 @@ int main(int argc, char **argv) {
 							windowDone = 0;
 						}
 						if (timeoutEnd > buffTimer[buffIndex]) {
+						printf("timeoutend = %li   %lu", (long)buffTimer[buffIndex], buffTimer[buffIndex]);
 							timeoutEnd = buffTimer[buffIndex];
 						}
 					}
@@ -371,7 +372,7 @@ int main(int argc, char **argv) {
 					tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
 				}
 				else {
-					tv->tv_usec = (long)(1000 * (1000 / sendRate));
+					tv->tv_usec = (long)(1000 * (1000 / sendRate)) - 1;
 				}
 				timeoutEnd = 1000000000 + getTimeMS();
 			}

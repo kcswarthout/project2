@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
 							}
 						}
 						else {
-							printf("adding\n");
+							printf("adding to %d\n", (i*queueLength) + queuePtr[i][1]);
 							queue[(i*queueLength) + queuePtr[i][1]] = pkt;
 							queuePtr[i][1]++;
 							if (queuePtr[i][1] == queueLength) {
@@ -272,8 +272,9 @@ int main(int argc, char **argv) {
 			printf("curr packet null\n");
 			for (i = 0; i < 3; i++) {
 				if (queuePtr[i][0] != queuePtr[i][1] || queueFull[i]) {
-					currPkt = queue[(i*queueLength) + queuePtr[i][1]];
-					queue[(i*queueLength) + queuePtr[i][1]] = NULL;
+					printf("currPkt = %d\n", (i*queueLength) + queuePtr[i][0]);
+					currPkt = queue[(i*queueLength) + queuePtr[i][0]];
+					queue[(i*queueLength) + queuePtr[i][0]] = NULL;
 					queuePtr[i][0]++;
 					if (queuePtr[i][0] == queueLength) {
 						queuePtr[i][0] = 0;

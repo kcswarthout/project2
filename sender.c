@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
 							if (buffTOCount[buffIndex] >= 5) {
 								printf("free buffer b/c timeout\n");
 								free(buffer[buffIndex]);
-								buffTimer[buffIndex] = 1000000000 + getTimeMS();
+								buffTimer[buffIndex] = 10000000000 + getTimeMS();
 								buffer[buffIndex] = NULL;
 							}
 							else {
@@ -369,15 +369,10 @@ int main(int argc, char **argv) {
 					tv->tv_usec = 0;
 					tv->tv_sec = 0;
 				}
-				else { 
-					if (timeoutEnd > getTimeMS()) {
-						tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000000);
-						tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
-					}
-					else {
-						tv->tv_usec = 0;
-						tv->tv_sec = 0;
-					}
+				else if (timeoutEnd > getTimeMS() && timeoutEnd < getTimeMS() + 10000000) {
+					tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000000);
+					tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
+				}
 				}
 				timeoutEnd = 1000000000 + getTimeMS();
 			}
@@ -431,6 +426,8 @@ int main(int argc, char **argv) {
 			}
 			// Send the packet to the requester 
 			if (pkt != NULL) {
+				tv->tv_usec = (1000 * 1000) / sendRate;
+				tv->tv_sec = 0;
 				printf("setup send pkt\n");
 				bzero(spkt, sizeof(struct ip_packet));
 				spkt->src = sIpAddr;
@@ -445,8 +442,6 @@ int main(int argc, char **argv) {
 				sendIpPacketTo(sockfd, spkt, (struct sockaddr *)esp->ai_addr);
 				numSent++;
 				pkt = NULL;
-				tv->tv_usec = (1000 * (1000 / sendRate)) % 1000;
-				tv->tv_sec = (1000 / sendRate) / 1000;
 			}
         }
     }

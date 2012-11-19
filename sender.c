@@ -359,7 +359,7 @@ int main(int argc, char **argv) {
 							windowDone = 0;
 						}
 						if (timeoutEnd > buffTimer[buffIndex]) {
-						printf("timeoutend = %li   %lu", (long)buffTimer[buffIndex], buffTimer[buffIndex]);
+						printf("timeoutend = %li  %lu  %llu", (long)(buffTimer[buffIndex] - getTimeMS()), (long unsigned)(buffTimer[buffIndex] - getTimeMS()), buffTimer[buffIndex] - getTimeMS());
 							timeoutEnd = buffTimer[buffIndex];
 						}
 					}

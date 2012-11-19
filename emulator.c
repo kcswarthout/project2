@@ -244,7 +244,9 @@ int main(int argc, char **argv) {
 	
 		}
 		else {
-			perror("Select()");
+			printf("Sockfd = %d\n", sockfd);
+			printf("tv%d  delay=%li s   %li us\n", x, tv.tv_sec, tv.tv_nsec);
+			perrorExit("Select()");
 		}
 		
 		if (currPkt == NULL) {

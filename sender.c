@@ -245,6 +245,7 @@ int main(int argc, char **argv) {
             filename = strdup(dpkt->payload);
 			window = dpkt->len;
 			rIpAddr = pkt->src;
+			sIpAddr = pkt->dest;
 			printf("window: %lu", dpkt->len);
             // Cleanup packets
             free(pkt);

@@ -294,7 +294,13 @@ int main(int argc, char **argv) {
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
 	struct ip_packet *msg = malloc(sizeof(struct ip_packet));
 	printf("loop\n");
+	int x = 0;
     while (loopCont) {
+		if (x < 20) {
+			printf("loop%d  delay=%l s   %l us\n", x, tv->tv_sec, tv->tv_usec);
+			x++;
+		}
+		else {break;};
 		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
 	
 		// ------------------------------------------------------------------------
@@ -361,11 +367,11 @@ int main(int argc, char **argv) {
 					windowStart += window;
 				}
 				else if ((1000 / sendRate) < (timeoutEnd - getTimeMS())) { 
-					tv->tv_usec = (1000 * (timeoutEnd - getTimeMS())) % 1000;
-					tv->tv_sec = (timeoutEnd - getTimeMS()) / 1000;
+					tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000);
+					tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
 				}
 				else {
-					tv->tv_usec = 1000 * (1000 / sendRate);
+					tv->tv_usec = (long)(1000 * (1000 / sendRate));
 				}
 				timeoutEnd = 1000000000 + getTimeMS();
 			}

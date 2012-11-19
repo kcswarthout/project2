@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
         bzero(dpkt, sizeof(struct packet));
         dpkt->type = 'R';
         dpkt->seq  = 0;
-        dpkt->len  = window;
+        dpkt->len  = (unsigned long) window;
 		printf("cpy pkt to ip pkt\n");
         strcpy(dpkt->payload, fileOption);
 		memcpy(pkt->payload, dpkt, sizeof(struct packet));

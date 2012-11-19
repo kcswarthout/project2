@@ -270,9 +270,9 @@ int main(int argc, char **argv) {
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(sockfd, &fds);
-	struct timeval *tv = malloc(sizeof(struct timeval));
+	struct timrspec *tv = malloc(sizeof(struct timespec));
 	tv->tv_sec = 0;
-	tv->tv_usec = 0;
+	tv->tv_nsec = 0;
 	int retval = 0;
 	printf("tv and fd set\n");
 	int numSent = 0;
@@ -288,7 +288,7 @@ int main(int argc, char **argv) {
 	}
 	unsigned long long *buffTimer = malloc(window * (sizeof (int)));
 	int *buffTOCount = malloc(window * (sizeof (int)));
-    //unsigned long long start = getTimeMS();
+    unsigned long long start = getTimeMS();
 	unsigned long long timeoutEnd = getTimeMS();
     struct packet *pkt;
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
@@ -297,17 +297,19 @@ int main(int argc, char **argv) {
 	int x = 0;
     while (loopCont) {
 		if (x < 20) {
-			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_usec);
+			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
 			x++;
 		}
 		else {break;};
-		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
+		start = getTimeMS();
+		retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
 	
 		// ------------------------------------------------------------------------
 		// receiving half
         
 		if (retval > 0) {
 			// Receive a message
+			tv->nsec = (long)(1000000 * (getTimeMS() - start));
 			printf("retval > 0\n");
 			bzero(msg, sizeof(struct ip_packet));
 			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, NULL, NULL);
@@ -327,6 +329,7 @@ int main(int argc, char **argv) {
 			free(buffer[pkt->seq - windowStart]);
 			buffer[pkt->seq - windowStart] = NULL;
 			pkt = NULL;
+			
 		}
 		else {
 			// ------------------------------------------------------------------------
@@ -335,10 +338,10 @@ int main(int argc, char **argv) {
 			if (sequenceNum >= window + windowStart) {
 				if ( timeoutEnd > getTimeMS()) {
 					if ( timeoutEnd > getTimeMS() + (1000 / sendRate)) {
-						tv->tv_usec = (1000 * 1000) / sendRate;
+						tv->tv_nsec = (long) (1000000000) / sendRate;
 					}
 					else {
-						tv->tv_usec = (long)(1000 * (timeoutEnd - getTimeMS()));
+						tv->tv_nsec = (long)(1000000 * (timeoutEnd - getTimeMS()));
 					}
 					tv->tv_sec = (long) 0;
 					break;
@@ -375,7 +378,7 @@ int main(int argc, char **argv) {
 				}
 				if (windowDone) {
 					windowStart += window;
-					tv->tv_usec = 0;
+					tv->tv_nsec = 0;
 					tv->tv_sec = 0;
 				}
 				/*else if ((timeoutEnd > getTimeMS()) && (timeoutEnd < getTimeMS() + 10000000)) {
@@ -435,7 +438,7 @@ int main(int argc, char **argv) {
 			}
 			// Send the packet to the requester 
 			if (pkt != NULL) {
-				tv->tv_usec = (1000 * 1000) / sendRate;
+				tv->tv_nsec = (1000000 * 1000) / sendRate;
 				tv->tv_sec = (long) 0;
 				printf("setup send pkt\n");
 				bzero(spkt, sizeof(struct ip_packet));

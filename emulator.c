@@ -143,11 +143,8 @@ int main(int argc, char **argv) {
 	struct table_entry *currEntry = NULL;
 	
 	fd_set fds;
-	FD_ZERO(&fds);
-	FD_SET(sockfd, &fds);
-    struct timespec *tv = malloc(sizeof(struct timespec));
-	tv->tv_sec = 10;
-	tv->tv_nsec = 0;
+	
+    struct timespec tv = {10 , 0};
     int retval = 0;
 	int i;
 	struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
@@ -160,16 +157,18 @@ int main(int argc, char **argv) {
 			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
 			x++;
 		}
+		FD_ZERO(&fds);
+		FD_SET(sockfd, &fds);
 		start = getTimeMS();
-		retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
+		retval = pselect(sockfd + 1, &fds, NULL, NULL, &tv, NULL);
 	
 		// ------------------------------------------------------------------------
 		// receiving half
         
 		if (retval > 0) {
 			// Receive a message
-			tv->tv_nsec -= (long)(1000000 * (getTimeMS() - start));
-			tv->tv_sec = 0;
+			tv.tv_nsec -= (long)(1000000 * (getTimeMS() - start));
+			tv.tv_sec = 0;
 			printf("retval > 0\n");
 			bzero(msg, sizeof(struct ip_packet));
 			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, NULL, NULL);
@@ -271,8 +270,8 @@ int main(int argc, char **argv) {
 						ePktList[i] = ePktList[i]->nextPkt;
 					}
 					currEntry = nextHop(currPkt, nextSock);
-					tv->tv_sec = currEntry->delay / 1000;
-					tv->tv_nsec = (currEntry->delay % 1000) * 1000000;
+					tv.tv_sec = currEntry->delay / 1000;
+					tv.tv_nsec = (currEntry->delay % 1000) * 1000000;
 				}
 			}
 		}

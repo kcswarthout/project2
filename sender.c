@@ -276,8 +276,6 @@ int main(int argc, char **argv) {
     else              printf("Opened file \"%s\" for reading.\n", filename);
 
 	fd_set fds;
-	FD_ZERO(&fds);
-	FD_SET(sockfd, &fds);
 	struct timespec *tv = malloc(sizeof(struct timespec));
 	tv->tv_sec = 0;
 	tv->tv_nsec = 0;
@@ -308,6 +306,8 @@ int main(int argc, char **argv) {
 			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
 			x++;
 		}
+		FD_ZERO(&fds);
+		FD_SET(sockfd, &fds);
 		start = getTimeMS();
 		retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
 	

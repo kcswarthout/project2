@@ -358,7 +358,7 @@ int main(int argc, char **argv) {
 				dpkt->seq  = drpkt->seq;
 				dpkt->len  = 0;
 				printf("cpy pkt to ip pkt\n");
-				dkpt->payload[0] = '\0';
+				dpkt->payload[0] = '\0';
 				memcpy(pkt->payload, dpkt, sizeof(struct packet));
 				pkt->src = rIpAddr;
 				pkt->srcPort = requesterPort;

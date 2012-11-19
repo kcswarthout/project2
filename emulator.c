@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
 	fd_set fds;
 	
     struct timespec *tv = malloc(sizeof(struct timespec));
-	tv->tv_sec = 0;
+	tv->tv_sec = (long) 1000;
 	tv->tv_nsec = 0;
     int retval = 0;
 	int i;

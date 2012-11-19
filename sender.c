@@ -289,7 +289,7 @@ int main(int argc, char **argv) {
 	unsigned long long *buffTimer = malloc(window * (sizeof (int)));
 	int *buffTOCount = malloc(window * (sizeof (int)));
     //unsigned long long start = getTimeMS();
-	unsigned long long timeoutEnd;
+	unsigned long long timeoutEnd = 10000000;
     struct packet *pkt;
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
 	struct ip_packet *msg = malloc(sizeof(struct ip_packet));
@@ -366,6 +366,7 @@ int main(int argc, char **argv) {
 				else {
 					tv->tv_usec = 1000 * (1000 / sendRate);
 				}
+				timeoutEnd = 10000000;
 			}
 			else if (!fileDone) {
 				// Is file part finished?

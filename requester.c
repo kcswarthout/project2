@@ -292,6 +292,26 @@ int main(int argc, char **argv) {
 			
             // Handle DATA packet
             if (drpkt->type == 'D') {
+				if ( (drpkt->seq - start) >= window) {
+					int i;
+					for (i = 0; i < window; i++) {
+						if (buffer[i] != NULL) {
+							size_t bytesWritten = fprintf(file, "%s", drpkt->payload);
+							if (bytesWritten != drpkt->len) {
+								fprintf(stderr,
+									"Incomplete file write: %d bytes written, %lu pkt len",
+									(int)bytesWritten, drpkt->len);
+							} else {
+								fflush(file);
+							}
+							buffer[i] = NULL;
+						}
+					}			
+					start += window;
+				}
+				else if (buffer[drpkt->seq - start] != NULL) {
+					printf("duplicate packet\n");
+				}
                 // Update statistics
                 ++numPacketsRecvd;
                 numBytesRecvd += drpkt->len;
@@ -309,33 +329,11 @@ int main(int argc, char **argv) {
                 //printPacketInfo(rpkt->payload, (struct sockaddr_storage *)&emulAddr);
     
                 // Save the data to a buffer
-				if ( (drpkt->seq - start) < window) {
-					if (buffer[drpkt->seq - start] != NULL) {
-						buffer[drpkt->seq - start] =  malloc(sizeof(struct packet));
-						memcpy(buffer[drpkt->seq - start], drpkt, sizeof(struct packet));
-						buffer[drpkt->seq - start] = drpkt;
-					}
-				}
-				else {
-					int i;
-					for (i = 0; i < window; i++) {
-						if (buffer[i] != NULL) {
-							size_t bytesWritten = fprintf(file, "%s", drpkt->payload);
-							if (bytesWritten != drpkt->len) {
-								fprintf(stderr,
-									"Incomplete file write: %d bytes written, %lu pkt len",
-									(int)bytesWritten, drpkt->len);
-							} else {
-								fflush(file);
-							}
-							buffer[i] = NULL;
-						}
-					}
-					buffer[drpkt->seq - start] =  malloc(sizeof(struct packet));
-					memcpy(buffer[drpkt->seq - start], drpkt, sizeof(struct packet));
-					buffer[drpkt->seq - start] = drpkt;
-					start += window;
-				}
+					
+				buffer[drpkt->seq - start] =  malloc(sizeof(struct packet));
+				memcpy(buffer[drpkt->seq - start], drpkt, sizeof(struct packet));
+				buffer[drpkt->seq - start] = drpkt;
+					
 					
 				pkt = malloc(sizeof(struct ip_packet));
 				bzero(pkt, sizeof(struct ip_packet));

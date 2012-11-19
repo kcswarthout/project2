@@ -366,13 +366,18 @@ int main(int argc, char **argv) {
 				}
 				if (windowDone) {
 					windowStart += window;
+					tv->tv_usec = 0;
+					tv->tv_sec = 0;
 				}
-				else if ((1000 / sendRate) < (timeoutEnd - getTimeMS())) { 
-					tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000000);
-					tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
-				}
-				else {
-					tv->tv_usec = (long)(1000 * (1000 / sendRate)) - 1;
+				else { 
+					if (timeoutEnd > getTimeMS()) {
+						tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000000);
+						tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
+					}
+					else {
+						tv->tv_usec = 0;
+						tv->tv_sec = 0;
+					}
 				}
 				timeoutEnd = 1000000000 + getTimeMS();
 			}
@@ -414,7 +419,6 @@ int main(int argc, char **argv) {
 					*/
 					printf("done pkt set\n");
 				}
-				tv->tv_usec = 1000 * (1000 / sendRate);
 			}
 			else {
 				// Create END packet and send it
@@ -441,6 +445,8 @@ int main(int argc, char **argv) {
 				sendIpPacketTo(sockfd, spkt, (struct sockaddr *)esp->ai_addr);
 				numSent++;
 				pkt = NULL;
+				tv->tv_usec = (1000 * (1000 / sendRate)) % 1000;
+				tv->tv_sec = (1000 / sendRate) / 1000;
 			}
         }
     }

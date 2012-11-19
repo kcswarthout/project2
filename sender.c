@@ -244,6 +244,8 @@ int main(int argc, char **argv) {
             // Grab a copy of the filename
             filename = strdup(dpkt->payload);
 			window = dpkt->len;
+			rIpAddr = pkt->src;
+			printf("window: %d", dpkt->len);
             // Cleanup packets
             free(pkt);
             free(msg);
@@ -281,7 +283,7 @@ int main(int argc, char **argv) {
 	struct packet **buffer = malloc(window * (sizeof (void *)));
 	unsigned long long *buffTimer = malloc(window * (sizeof (int)));
 	int *buffTOCount = malloc(window * (sizeof (int)));
-    unsigned long long start = getTimeMS();
+    //unsigned long long start = getTimeMS();
 	unsigned long long timeoutEnd;
     struct packet *pkt;
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
@@ -335,12 +337,13 @@ int main(int argc, char **argv) {
 								buffTOCount[buffIndex]++;
 								pkt = buffer[buffIndex];
 								windowDone = 0;
-								if (timeoutEnd > buffTimer[buffIndex]) {
-									timeoutEnd = buffTimer[buffIndex];
-								}
+								break;
 							}
 						}
 						else {
+							if (timeoutEnd > buffTimer[buffIndex]) {
+								timeoutEnd = buffTimer[buffIndex];
+							}
 							windowDone = 0;
 						}
 					}

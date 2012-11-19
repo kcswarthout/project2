@@ -197,6 +197,7 @@ int main(int argc, char **argv) {
 			bzero(pkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, pkt);
 			dpkt = (struct packet *)pkt->payload;
+			printIpPacketInfo(pkt, NULL);
 			if (shouldForward(pkt))	{
 				printf("forwarding\n");
 				numRecv++;

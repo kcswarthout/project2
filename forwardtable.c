@@ -147,6 +147,8 @@ int parseFile(const char *filename, unsigned int port) {
 		table[i].nextHopPort = tmp->nextHopPort;
 		table[i].delay = tmp->delay;
 		table[i].lossChance = tmp->lossChance;
+		printf("dest: %s %u     nexthop: %s %u   delay: %u  loss: %d", 
+				tmp->dest, tmp->destPort, tmp->nextHop, tmp->nextHopPort, tmp->delay, tmp->lossChance);
 		rawTable = tmp;
 		tmp = tmp->nextEntry;
 		free(rawTable);

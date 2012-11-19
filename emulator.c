@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
 					sec = 0;
 					nsec = 0;
 			}
-			tv->tv_sec = sec
+			tv->tv_sec = sec;
 			tv->tv_nsec = nsec;
 			printf("retval > 0\n");
 			bzero(msg, sizeof(struct ip_packet));

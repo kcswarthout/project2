@@ -117,6 +117,10 @@ int main(int argc, char **argv) {
 	int queuePtr[3][2] = {{0}};
 	int queueFull[3] = {0};
 	struct ip_packet **queue = malloc(3 * queueLength * (sizeof (void *)));
+	int qI;
+	for (qI = 0; qI < queueLength * 3; qI++) {
+		queue[qI] = NULL;
+	}
 	struct end_packet_list *ePktList[3] = {malloc(sizeof(struct end_packet_list)), 
 			malloc(sizeof(struct end_packet_list)), malloc(sizeof(struct end_packet_list))};
 	struct end_packet_list *ePktTail[3] = {ePktList[0], ePktList[1], ePktList[2]};

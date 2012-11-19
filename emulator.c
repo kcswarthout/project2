@@ -292,6 +292,10 @@ int main(int argc, char **argv) {
 					tv->tv_nsec = (long)(currEntry->delay % 1000) * 1000000;
 				}
 			}
+			if (i == 3) {
+				tv->tv_sec = (long) 1000;
+				tv->tv_nsec = (long) 0;
+			}
 		}
     }
 	// Cleanup packets

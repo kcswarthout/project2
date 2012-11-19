@@ -198,6 +198,7 @@ int main(int argc, char **argv) {
 			deserializeIpPacket(msg, pkt);
 			dpkt = (struct packet *)pkt->payload;
 			if (shouldForward(pkt))	{
+				printf("forwarding\n");
 				numRecv++;
 				for (i = 0; i < 3; i++) {
 					if (pkt->priority == priority[i]) {
@@ -214,6 +215,7 @@ int main(int argc, char **argv) {
 							}
 						}
 						else {
+							printf("adding\n");
 							queue[(i*queueLength) + queuePtr[i][1]] = pkt;
 							queuePtr[i][1]++;
 							if (queuePtr[i][1] == queueLength) {

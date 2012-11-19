@@ -117,8 +117,9 @@ int main(int argc, char **argv) {
     else            { printf("Requester socket: "); printNameInfo(rp); }
 	
 	struct sockaddr_in *tmp = (struct sockaddr_in *)rp->ai_addr;
-	unsigned long rIpAddr = tmp->sin_addr.s_addr;
-	printf("req ip %lu\n", rIpAddr);
+	unsigned long rIpAddr = ntohl(tmp->sin_addr.s_addr);
+	printf("req ip %s      %lu\n", inet_ntoa(tmp->sin_addr), rIpAddr);
+	
 
 	// ------------------------------------------------------------------------
     // Setup emul address info 

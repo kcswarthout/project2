@@ -270,7 +270,7 @@ int main(int argc, char **argv) {
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(sockfd, &fds);
-	struct timrspec *tv = malloc(sizeof(struct timespec));
+	struct timespec *tv = malloc(sizeof(struct timespec));
 	tv->tv_sec = 0;
 	tv->tv_nsec = 0;
 	int retval = 0;

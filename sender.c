@@ -281,7 +281,11 @@ int main(int argc, char **argv) {
 	int windowDone = 1;
 	int fileDone = 0;
 	int loopCont = 1;
+	int buffIndex;
 	struct packet **buffer = malloc(window * (sizeof (void *)));
+	for (buffIndex = 0; buffIndex < window; buffIndex++) {
+		buffer[buffIndex] = NULL;
+	}
 	unsigned long long *buffTimer = malloc(window * (sizeof (int)));
 	int *buffTOCount = malloc(window * (sizeof (int)));
     //unsigned long long start = getTimeMS();
@@ -324,7 +328,6 @@ int main(int argc, char **argv) {
 			printf("retval == 0\n");
 			if (sequenceNum >= window + windowStart) {
 				printf("resending\n");
-				int buffIndex;
 				windowDone = 1;
 				for (buffIndex = 0; buffIndex < window; buffIndex++) {	
 					if (buffer[buffIndex] != NULL) {

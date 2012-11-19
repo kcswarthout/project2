@@ -159,7 +159,7 @@ void printIpPacketInfo(struct ip_packet *pkt, struct sockaddr_storage *saddr) {
         fprintf(stderr, "Unable to print info for null packet\n");
         return;
     }
-	printf("Pri %hhu : Sz %lu : Dst %s %iu : Src %s %iu", pkt->priority, 
+	printf("Pri %hhu : Sz %lu : Dst %lu %iu : Src %lu %iu", pkt->priority, 
 			pkt->length, addrToName(pkt->dest), pkt->destPort, addrToName(pkt->src), pkt->srcPort);
 	
 	printPacketInfo((struct packet *)pkt->payload, saddr);

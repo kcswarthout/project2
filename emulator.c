@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
     if (sp == NULL) perrorExit("Send socket creation failed");
     else            printf("emul socket created.\n");
 
-	parseFile(filename, sp->ai_canonname, emulPort);
+	parseFile(filename, emulPort);
 	
 	
 

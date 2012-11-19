@@ -61,9 +61,10 @@ int shouldForward(struct ip_packet *pkt) {
 //   a linked list of file_entry structures that contain the location 
 //   and sequence information from the tracker for the specified file.
 // ----------------------------------------------------------------------------
-int parseFile(const char *filename, char *hostname, unsigned int port) {
+int parseFile(const char *filename, unsigned int port) {
     if (filename == NULL) ferrorExit("ParseTracker: invalid filename");
-
+	char *hostname;
+	
     // Setup the rawTable
     struct raw_entry *rawTable = malloc(sizeof(struct raw_entry));
 	struct raw_entry *tmp = rawTable;
@@ -89,6 +90,10 @@ int parseFile(const char *filename, char *hostname, unsigned int port) {
             tok  = strtok(NULL, " ");
 			n++;
         }
+		size_t len = strlen((const char *) tokens[EMULATOR]);
+		hostname = malloc(len + 1);
+		hostname[len] = '\0';
+		gethostname(hostname, len);
 		printf("tokenized a line\n");
 		printf("EMUL %d\n", EMULATOR);
 		printf("EMULPORT %d\n", EMUL_PORT);

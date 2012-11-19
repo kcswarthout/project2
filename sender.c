@@ -300,7 +300,6 @@ int main(int argc, char **argv) {
 			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
 			x++;
 		}
-		else {break;};
 		start = getTimeMS();
 		retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
 	

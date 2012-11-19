@@ -134,22 +134,30 @@ int main(int argc, char **argv) {
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(sockfd, &fds);
-    struct timeval *tv = malloc(sizeof(struct timeval));
+    struct timespec *tv = malloc(sizeof(struct timespec));
 	tv->tv_sec = 10000;
-	tv->tv_usec = 0;
+	tv->tv_nsec = 0;
     int retval = 0;
 	int i;
 	struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
 	struct packet *dpkt;
+	unsigned long long start = getTimeMS();
 	void *msg = malloc(sizeof(struct ip_packet));
     for (;;) {
-		retval = select(sockfd + 1, &fds, NULL, NULL, tv);
+		if (x < 20) {
+			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
+			x++;
+		}
+		start = getTimeMS();
+		retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, null);
 	
 		// ------------------------------------------------------------------------
 		// receiving half
         
 		if (retval > 0) {
 			// Receive a message
+			tv->tv_nsec = (long)(1000000 * (getTimeMS() - start));
+			printf("retval > 0\n");
 			bzero(msg, sizeof(struct ip_packet));
 			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, NULL, NULL);
 			if (bytesRecvd == -1) {
@@ -203,6 +211,7 @@ int main(int argc, char **argv) {
 		else if (retval == 0) {
 			// ------------------------------------------------------------------------
 			// sending half
+			printf("retval == 0\n");
 			if (currPkt != NULL) {
 				int lossChance = currEntry->lossChance;
 				// Determine if packet should be dropped
@@ -214,6 +223,7 @@ int main(int argc, char **argv) {
 					logP(currPkt, "Loss event occurred");
 				}
 				else {
+					printf("send packet\n");
 					sendIpPacketTo(sockfd, currPkt, (struct sockaddr*)nextSock);
 					free(currPkt);
 					currPkt = NULL;
@@ -226,6 +236,7 @@ int main(int argc, char **argv) {
 		}
 		
 		if (currPkt == NULL) {
+			printf("curr packet null\n");
 			for (i = 0; i < 3; i++) {
 				if (queuePtr[i][0] != queuePtr[i][1] || queueFull[i]) {
 					currPkt = queue[(i*queueLength) + queuePtr[i][1]];

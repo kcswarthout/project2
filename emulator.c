@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
 	int x = 0;
     for (;;) {
 		if (x < 20) {
-			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
+			printf("loop%d  delay=%li s   %li us\n", x, tv.tv_sec, tv.tv_nsec);
 			x++;
 		}
 		FD_ZERO(&fds);

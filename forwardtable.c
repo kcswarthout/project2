@@ -28,12 +28,14 @@ struct table_entry *table = NULL;
 int size = 0;
 
 struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
-	if (table == NULL) printf("No table entries");
+	if (table == NULL) printf("No table entries\n");
 	if (pkt == NULL) perrorExit("nextHop function: pkt null");
 	struct table_entry *nextEntry = NULL;
 	int i;
 	for (i = 0; i < size; i++) {
+		printf("dest %lu  %lu\n", table[i].dest, pkt->dest);
 		if (table[i].dest == pkt->dest) {
+			printf("destport %lu  %lu\n", table[i].destPort, pkt->destPort);
 			if (table[i].destPort == pkt->destPort) {
 				if (socket != NULL) {
 					bzero(socket, sizeof(struct sockaddr_in));
@@ -41,10 +43,11 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 					socket->sin_addr.s_addr = table[i].nextHop;
 					socket->sin_port = table[i].nextHopPort;
 				}
-				*nextEntry = table[i];
+				nextEntry = table[i];
 				break;
 			}
 		}
+		printf("no match\n\n");
 	}
     return nextEntry;
 }
@@ -147,7 +150,7 @@ int parseFile(const char *filename, unsigned int port) {
 		table[i].nextHopPort = tmp->nextHopPort;
 		table[i].delay = tmp->delay;
 		table[i].lossChance = tmp->lossChance;
-		printf("dest: %s %u     nexthop: %s %u   delay: %u  loss: %d", 
+		printf("dest: %s %u     nexthop: %s %u   delay: %u  loss: %d\n", 
 				tmp->dest, tmp->destPort, tmp->nextHop, tmp->nextHopPort, tmp->delay, tmp->lossChance);
 		rawTable = tmp;
 		tmp = tmp->nextEntry;

@@ -336,7 +336,7 @@ int main(int argc, char **argv) {
 			// sending half
 			printf("retval == 0\n");
 			if (sequenceNum >= window + windowStart) {
-				if ( timeoutEnd > getTimeMS()) {
+				/*if ( timeoutEnd > getTimeMS()) {
 					if ( timeoutEnd > getTimeMS() + (1000 / sendRate)) {
 						tv->tv_nsec = (long) (1000000000) / sendRate;
 					}
@@ -345,7 +345,7 @@ int main(int argc, char **argv) {
 					}
 					tv->tv_sec = (long) 0;
 					break;
-				}
+				}*/
 				printf("resending\n");
 				windowDone = 1;
 				for (buffIndex = 0; buffIndex < window; buffIndex++) {	
@@ -381,12 +381,12 @@ int main(int argc, char **argv) {
 					tv->tv_nsec = 0;
 					tv->tv_sec = 0;
 				}
-				/*else if ((timeoutEnd > getTimeMS()) && (timeoutEnd < getTimeMS() + 10000000)) {
-					tv->tv_usec = (long)((1000 * (timeoutEnd - getTimeMS())) % 1000000);
+				else if ((timeoutEnd > getTimeMS()) && (timeoutEnd < getTimeMS() + 10000000)) {
+					tv->tv_nsec = (long)((1000000 * (timeoutEnd - getTimeMS())) % 1000000000);
 					tv->tv_sec = (long)((timeoutEnd - getTimeMS()) / 1000);
 				}
 				
-				timeoutEnd = 1000000000 + getTimeMS();*/
+				timeoutEnd = 1000000000 + getTimeMS();
 			}
 			else if (!fileDone) {
 				// Is file part finished?

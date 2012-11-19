@@ -90,6 +90,12 @@ int parseFile(const char *filename, char *hostname, unsigned int port) {
 			n++;
         }
 		printf("tokenized a line\n");
+		printf("EMUL %d\n", EMULATOR);
+		printf("EMULPORT %d\n", EMUL_PORT);
+		printf("hostname %s\n", hostname);
+		printf("port %d\n", port);
+		printf("tok[em] %s\n", tokens[EMULATOR]);
+		printf("tok[empo] %s\n", tokens[EMUL_PORT]);
         // Only process this line if it is for the specified emulator
         if (strcmp(tokens[EMULATOR], hostname) == 0 && atoi(tokens[EMUL_PORT]) == port) {
 			printf("for this emul\n");

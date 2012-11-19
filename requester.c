@@ -296,11 +296,11 @@ int main(int argc, char **argv) {
 					int i;
 					for (i = 0; i < window; i++) {
 						if (buffer[i] != NULL) {
-							size_t bytesWritten = fprintf(file, "%s", drpkt->payload);
-							if (bytesWritten != drpkt->len) {
+							size_t bytesWritten = fprintf(file, "%s", buffer[i]->payload);
+							if (bytesWritten != buffer[i]->len) {
 								fprintf(stderr,
 									"Incomplete file write: %d bytes written, %lu pkt len",
-									(int)bytesWritten, drpkt->len);
+									(int)bytesWritten, buffer[i]->len);
 							} else {
 								fflush(file);
 							}
@@ -391,11 +391,11 @@ int main(int argc, char **argv) {
 				int i;
 				for (i = 0; i < window; i++) {
 					if (buffer[i] != NULL) {
-						size_t bytesWritten = fprintf(file, "%s", drpkt->payload);
-						if (bytesWritten != drpkt->len) {
+						size_t bytesWritten = fprintf(file, "%s", buffer[i]->payload);
+						if (bytesWritten != buffer[i]->len) {
 							fprintf(stderr,
 								"Incomplete file write: %d bytes written, %lu pkt len",
-								(int)bytesWritten, drpkt->len);
+								(int)bytesWritten, buffer[i]->len);
 						} else {
 							fflush(file);
 						}

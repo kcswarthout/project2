@@ -37,15 +37,12 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 		if (table[i].dest == pkt->dest) {
 			printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
 			if (table[i].destPort == pkt->destPort) {
-				printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
 				if (socket != NULL) {
-					printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
-					socket->sin_addr.s_addr = table[i].nextHop;
-					socket->sin_port = table[i].nextHopPort;
-					printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
-					printf("socket is %lu  %u", socket->sin_addr.s_addr, socket->sin_port);
+					socket->sin_addr.s_addr = htonl(table[i].nextHop);
+					socket->sin_port = htons(table[i].nextHopPort);
+					printf("socket is %lu  %u", ntohl(socket->sin_addr.s_addr), ntohs(socket->sin_port));
 				}
 				printf("i = %d\n", i);
 				nextEntry = table + i;

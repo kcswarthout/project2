@@ -41,8 +41,7 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
 					socket->sin_addr.s_addr = htonl((uint32_t)table[i].nextHop);
-					socket->sin_port = htons(9876);//table[i].nextHopPort);
-					printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
+					socket->sin_port = htons(table[i].nextHopPort);
 					printf("socket is %lu  %u", ntohl(socket->sin_addr.s_addr), (unsigned long)ntohs(socket->sin_port));
 				}
 				printf("i = %d\n", i);

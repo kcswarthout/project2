@@ -282,7 +282,7 @@ int main(int argc, char **argv) {
 					queueFull[i] = 0;
 					if (ePktList[i]->pkt != NULL) {
 						queue[(i*queueLength) + queuePtr[i][1]] = ePktList[i]->pkt;
-						queuePtr[i][1]++;
+						queuePtr[i][0]++;
 						if (queuePtr[i][1] == queueLength) {
 							queuePtr[i][1] = 0;
 						}
@@ -295,6 +295,7 @@ int main(int argc, char **argv) {
 					printf("delay %u   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
 					tv->tv_sec = (long)currEntry->delay / 1000;
 					tv->tv_nsec = (long)(currEntry->delay % 1000) * 1000000;
+					printf("ptrs priority %d    %d - %d", i, queuePtr[i][0], queuePtr[i][0]);
 					break;
 				}
 			}

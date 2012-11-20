@@ -158,7 +158,6 @@ int main(int argc, char **argv) {
 	struct packet *dpkt;
 	unsigned long long start = getTimeMS();
 	void *msg = malloc(sizeof(struct ip_packet));
-	int x = 0;
     for (;;) {
 		FD_ZERO(&fds);
 		FD_SET(sockfd, &fds);

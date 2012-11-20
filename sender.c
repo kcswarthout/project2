@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
 		struct timespec *tv = malloc(sizeof(struct timespec));
 		tv->tv_sec = 15;
 		tv->tv_nsec = 0;
-		int retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
+		pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
 		//printf("retval = %d", retval);
         // Receive a message
         size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
@@ -300,7 +300,6 @@ int main(int argc, char **argv) {
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
 	struct ip_packet *msg = malloc(sizeof(struct ip_packet));
 	//printf("loop\n");
-	int x = 0;
     while (loopCont) {
 		
 		FD_ZERO(&fds);

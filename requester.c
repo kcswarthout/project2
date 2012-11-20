@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
 	
 	
 	tmp = (struct sockaddr_in *)esp->ai_addr;
-	unsigned long eIpAddr = ntohl(tmp->sin_addr.s_addr);
+	//unsigned long eIpAddr = ntohl(tmp->sin_addr.s_addr);
 	//printf("emul ip %s      %lu\n", inet_ntoa(tmp->sin_addr), eIpAddr);
 	close(esockfd);
 	

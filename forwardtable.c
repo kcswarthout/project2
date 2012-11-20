@@ -30,7 +30,6 @@ int size = 0;
 struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 	if (table == NULL) printf("No table entries\n");
 	if (pkt == NULL) perrorExit("nextHop function: pkt null");
-	socket = malloc(sizeof(struct sockaddr_in));
 	struct table_entry *nextEntry = NULL;
 	int i;
 	for (i = 0; i < size; i++) {
@@ -57,9 +56,7 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 }
 
 int shouldForward(struct ip_packet *pkt) {
-	struct sockaddr_in *socket;
-	struct table_entry *p = nextHop(pkt, socket);
-	free(socket);
+	struct table_entry *p = nextHop(pkt, NULL);
 	if (p == NULL) return 0;
 	return 1;
 } 

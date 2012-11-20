@@ -149,6 +149,10 @@ int main(int argc, char **argv) {
 	tv->tv_nsec = 0;
     int retval = 0;
 	int i;
+	for (i = 0; i < 3; i++) {
+		ePktList[i]->pkt = NULL;
+	}
+	i = 0;
 	int numRecv = 0;
 	struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
 	struct packet *dpkt;
@@ -280,7 +284,7 @@ int main(int argc, char **argv) {
 						queuePtr[i][0] = 0;
 					}
 					queueFull[i] = 0;
-					if (ePktList[i]->pkt != NULL) {
+					if (ePktList[i]->pkt != NULL && queueFull[i]) {
 						queue[(i*queueLength) + queuePtr[i][1]] = ePktList[i]->pkt;
 						queuePtr[i][0]++;
 						if (queuePtr[i][1] == queueLength) {
@@ -289,13 +293,16 @@ int main(int argc, char **argv) {
 						if (queuePtr[i][1] == queuePtr[i][0]) {
 							queueFull[i] = 1;
 						}
+						struct end_packet_list *tmp = ePktList[i];
 						ePktList[i] = ePktList[i]->nextPkt;
+						free(tmp);
+						
 					}
 					currEntry = nextHop(currPkt, nextSock);
-					printf("delay %u   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
+					printf("delay %lu   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
 					tv->tv_sec = (long)currEntry->delay / 1000;
 					tv->tv_nsec = (long)(currEntry->delay % 1000) * 1000000;
-					printf("ptrs priority %d    %d - %d", i, queuePtr[i][0], queuePtr[i][0]);
+					printf("ptrs priority %d    %d - %d      full=%d", i, queuePtr[i][0], queuePtr[i][0], queueFull[i]);
 					break;
 				}
 			}

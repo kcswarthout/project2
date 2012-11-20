@@ -43,11 +43,11 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 		}
 		printf("no match\n\n");
 	}
-	if (socket != NULL) {
+	if (socket != NULL && nextEntry != NULL) {
 		bzero(socket, sizeof(struct sockaddr_in));
 		socket->sin_family = AF_INET;
-		socket->sin_addr.s_addr = nextEntry.nextHop;
-		socket->sin_port = nextEntry.nextHopPort;
+		socket->sin_addr.s_addr = nextEntry->nextHop;
+		socket->sin_port = nextEntry->nextHopPort;
 		printf("socket is %lu  %u", socket->sin_addr.s_addr, socket->sin_port);
 	}
     return nextEntry;

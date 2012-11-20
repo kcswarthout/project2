@@ -37,6 +37,7 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 		if (table[i].dest == pkt->dest) {
 			printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
 			if (table[i].destPort == pkt->destPort) {
+				printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
 				printf("i = %d\n", i);
 				nextEntry = table + i;
 				break;

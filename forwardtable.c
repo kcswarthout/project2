@@ -38,7 +38,7 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 			printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
 			if (table[i].destPort == pkt->destPort) {
 				if (socket != NULL) {
-					printf("socket is %lu  &u", table[i].nextHop, table[i].nextHopPort);
+					printf("socket is %lu  %u", table[i].nextHop, table[i].nextHopPort);
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
 					socket->sin_addr.s_addr = table[i].nextHop;

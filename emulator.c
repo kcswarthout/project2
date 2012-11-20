@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 	unsigned char  priority[3] = {HIGH_PRIORITY, MEDIUM_PRIORITY, LOW_PRIORITY};
 	
 	struct ip_packet *currPkt = NULL;
-	struct sockaddr_in *nextSock = malloc(sizeof(struct sockaddr_in));
+	struct sockaddr_in *nextSock;
 	struct table_entry *currEntry = NULL;
 	
 	fd_set fds;
@@ -299,7 +299,6 @@ int main(int argc, char **argv) {
 						free(tmp);
 						
 					}
-					bzero(nextSock, sizeof(struct sockaddr_in));
 					currEntry = nextHop(currPkt, nextSock);
 					printf("delay %lu   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
 					tv->tv_sec = (long)currEntry->delay / 1000;

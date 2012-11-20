@@ -160,10 +160,6 @@ int main(int argc, char **argv) {
 	void *msg = malloc(sizeof(struct ip_packet));
 	int x = 0;
     for (;;) {
-		if (x < 20) {
-			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
-			x++;
-		}
 		FD_ZERO(&fds);
 		FD_SET(sockfd, &fds);
 		start = getTimeMS();
@@ -203,7 +199,7 @@ int main(int argc, char **argv) {
 			dpkt = (struct packet *)pkt->payload;
 			printIpPacketInfo(pkt, NULL);
 			if (shouldForward(pkt))	{
-				printf("forwarding\n");
+				//printf("forwarding\n");
 				numRecv++;
 				for (i = 0; i < 3; i++) {
 					if (pkt->priority == priority[i]) {
@@ -220,7 +216,7 @@ int main(int argc, char **argv) {
 							}
 						}
 						else {
-							printf("adding to %d\n", (i*queueLength) + queuePtr[i][1]);
+							//printf("adding to %d\n", (i*queueLength) + queuePtr[i][1]);
 							queue[(i*queueLength) + queuePtr[i][1]] = pkt;
 							queuePtr[i][1]++;
 							if (queuePtr[i][1] == queueLength) {
@@ -259,7 +255,7 @@ int main(int argc, char **argv) {
 				}
 				else {
 					printf("send packet\n");
-					printf("socket is %lu  %u", nextSock->sin_addr.s_addr, nextSock->sin_port);
+					//printf("socket is %lu  %u", nextSock->sin_addr.s_addr, nextSock->sin_port);
 					sendIpPacketTo(sockfd, currPkt, (struct sockaddr*)nextSock);
 					free(currPkt);
 					currPkt = NULL;
@@ -269,16 +265,16 @@ int main(int argc, char **argv) {
 	
 		}
 		else {
-			printf("Sockfd = %d\n", sockfd);
-			printf("tv%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
+			//printf("Sockfd = %d\n", sockfd);
+			//printf("tv%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
 			perrorExit("Select()");
 		}
 		
 		if (currPkt == NULL) {
-			printf("curr packet null\n");
+			//printf("curr packet null\n");
 			for (i = 0; i < 3; i++) {
 				if (queuePtr[i][0] != queuePtr[i][1] || queueFull[i]) {
-					printf("currPkt = %d\n", (i*queueLength) + queuePtr[i][0]);
+					//printf("currPkt = %d\n", (i*queueLength) + queuePtr[i][0]);
 					currPkt = queue[(i*queueLength) + queuePtr[i][0]];
 					queue[(i*queueLength) + queuePtr[i][0]] = NULL;
 					queuePtr[i][0]++;
@@ -302,10 +298,10 @@ int main(int argc, char **argv) {
 					}
 					nextSock = malloc(sizeof(struct sockaddr_in));
 					currEntry = nextHop(currPkt, nextSock);
-					printf("delay %lu   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
+					//printf("delay %lu   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
 					tv->tv_sec = (long)currEntry->delay / 1000;
 					tv->tv_nsec = (long)(currEntry->delay % 1000) * 1000000;
-					printf("ptrs priority %d    %d - %d      full=%d", i, queuePtr[i][0], queuePtr[i][0], queueFull[i]);
+					//printf("ptrs priority %d    %d - %d      full=%d", i, queuePtr[i][0], queuePtr[i][0], queueFull[i]);
 					break;
 				}
 			}

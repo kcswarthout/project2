@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
 		tv->tv_sec = 15;
 		tv->tv_nsec = 0;
 		int retval = pselect(sockfd + 1, &fds, NULL, NULL, tv, NULL);
-		printf("retval = %d", retval);
+		//printf("retval = %d", retval);
         // Receive a message
         size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
             (struct sockaddr *)esp->ai_addr, &esp->ai_addrlen);
@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
             continue;
         }
 		else {
-			printf("received");
+			//printf("received");
 		}
         // Deserialize the message into a ip_packet 
         struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
 			window = dpkt->len;
 			rIpAddr = pkt->src;
 			sIpAddr = pkt->dest;
-			printf("window: %lu", dpkt->len);
+			//printf("window: %lu", dpkt->len);
             // Cleanup packets
             free(pkt);
             free(msg);
@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
 	tv->tv_sec = 0;
 	tv->tv_nsec = 0;
 	int retval = 0;
-	printf("tv and fd set\n");
+	//printf("tv and fd set\n");
 	int numSent = 0;
 	int numLost = 0;
 	unsigned long windowStart = 1;
@@ -299,13 +299,10 @@ int main(int argc, char **argv) {
     struct packet *pkt;
 	struct ip_packet *spkt = malloc(sizeof(struct ip_packet));
 	struct ip_packet *msg = malloc(sizeof(struct ip_packet));
-	printf("loop\n");
+	//printf("loop\n");
 	int x = 0;
     while (loopCont) {
-		if (x < 20) {
-			printf("loop%d  delay=%li s   %li us\n", x, tv->tv_sec, tv->tv_nsec);
-			x++;
-		}
+		
 		FD_ZERO(&fds);
 		FD_SET(sockfd, &fds);
 		start = getTimeMS();
@@ -329,7 +326,7 @@ int main(int argc, char **argv) {
 			}
 			tv->tv_sec = sec;
 			tv->tv_nsec = nsec;
-			printf("retval > 0\n");
+			//printf("retval > 0\n");
 			bzero(msg, sizeof(struct ip_packet));
 			size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0, (struct sockaddr *)esp->ai_addr, &esp->ai_addrlen);
 			if (bytesRecvd == -1) {
@@ -338,13 +335,13 @@ int main(int argc, char **argv) {
 				continue;
 			}
 			else {
-				printf("recv\n");
+				//printf("recv\n");
 			}
 			// Deserialize the message into a packet 
 			bzero(spkt, sizeof(struct ip_packet));
 			deserializeIpPacket(msg, spkt);
 			pkt = (struct packet *)spkt->payload;
-			printf("free buffer b/c ack\n");
+			//printf("free buffer b/c ack\n");
 			free(buffer[pkt->seq - windowStart]);
 			buffer[pkt->seq - windowStart] = NULL;
 			pkt = NULL;
@@ -353,7 +350,7 @@ int main(int argc, char **argv) {
 		else {
 			// ------------------------------------------------------------------------
 			// sending half
-			printf("retval == 0\n");
+			//printf("retval == 0\n");
 			if (sequenceNum >= window + windowStart) {
 				/*if ( timeoutEnd > getTimeMS()) {
 					if ( timeoutEnd > getTimeMS() + (1000 / sendRate)) {
@@ -365,16 +362,16 @@ int main(int argc, char **argv) {
 					tv->tv_sec = (long) 0;
 					break;
 				}*/
-				printf("resending\n");
+				//printf("resending\n");
 				windowDone = 1;
 				for (buffIndex = 0; buffIndex < window; buffIndex++) {	
 					if (buffer[buffIndex] != NULL) {
-						printf("check buffer b/c timeout%d\n", buffIndex);
+						//printf("check buffer b/c timeout%d\n", buffIndex);
 						if (buffTimer[buffIndex] <= getTimeMS()) {
-							printf("timeout\n");
+							//printf("timeout\n");
 							numLost++;
 							if (buffTOCount[buffIndex] >= 5) {
-								printf("free buffer b/c timeout\n");
+								//printf("free buffer b/c timeout\n");
 								free(buffer[buffIndex]);
 								buffTimer[buffIndex] = 10000000000 + getTimeMS();
 								buffer[buffIndex] = NULL;
@@ -416,7 +413,7 @@ int main(int argc, char **argv) {
 				}
 				else {
 					// Create DATA packet
-					printf("create data pkt\n");
+					//printf("create data pkt\n");
 					pkt = malloc(sizeof(struct packet));
 					bzero(pkt, sizeof(struct packet));
 					pkt->type = 'D';
@@ -428,7 +425,7 @@ int main(int argc, char **argv) {
 					bzero(buf, payloadLen);
 					fread(buf, 1, payloadLen, file); // TODO: check return value
 					memcpy(pkt->payload, buf, sizeof(buf));
-					printf("set buffer%lu w/ pkt%lu\n", pkt->seq - windowStart, pkt->seq);
+					//printf("set buffer%lu w/ pkt%lu\n", pkt->seq - windowStart, pkt->seq);
 					buffer[pkt->seq - windowStart] = pkt;
 					buffTimer[pkt->seq - windowStart] = timeout + getTimeMS();
 					buffTOCount[pkt->seq - windowStart] = 0;
@@ -459,7 +456,7 @@ int main(int argc, char **argv) {
 			if (pkt != NULL) {
 				tv->tv_nsec = (1000000 * 1000) / sendRate;
 				tv->tv_sec = (long) 0;
-				printf("setup send pkt\n");
+				//printf("setup send pkt\n");
 				bzero(spkt, sizeof(struct ip_packet));
 				spkt->src = sIpAddr;
 				spkt->srcPort = senderPort;
@@ -467,9 +464,9 @@ int main(int argc, char **argv) {
 				spkt->destPort = requesterPort;
 				spkt->priority = priority;
 				spkt->length = HEADER_SIZE + pkt->len;
-				printf("memcpy to send\n");
+				//printf("memcpy to send\n");
 				memcpy(spkt->payload, pkt, sizeof(struct packet));
-				printf("send\n");
+				//printf("send\n");
 				sendIpPacketTo(sockfd, spkt, (struct sockaddr *)esp->ai_addr);
 				numSent++;
 				pkt = NULL;
@@ -489,7 +486,9 @@ int main(int argc, char **argv) {
     // Got what we came for, shut it down
     if (close(sockfd) == -1) perrorExit("Close error");
     else                     puts("Connection closed.\n");
-
+	
+	printf("Percent lost = %d", numLost * 100 / numSent);
+	
     // Cleanup address info data
     freeaddrinfo(senderinfo);
 

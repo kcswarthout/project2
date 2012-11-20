@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 	
 	struct sockaddr_in *tmp = (struct sockaddr_in *)rp->ai_addr;
 	unsigned long rIpAddr = ntohl(tmp->sin_addr.s_addr);
-	printf("req ip %s      %lu\n", inet_ntoa(tmp->sin_addr), rIpAddr);
+	//printf("req ip %s      %lu\n", inet_ntoa(tmp->sin_addr), rIpAddr);
 	
 
 	// ------------------------------------------------------------------------
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
 	
 	tmp = (struct sockaddr_in *)esp->ai_addr;
 	unsigned long eIpAddr = ntohl(tmp->sin_addr.s_addr);
-	printf("emul ip %s      %lu\n", inet_ntoa(tmp->sin_addr), eIpAddr);
+	//printf("emul ip %s      %lu\n", inet_ntoa(tmp->sin_addr), eIpAddr);
 	close(esockfd);
 	
     // ------------------------------------------------------------------------
@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
 		
 		tmp = (struct sockaddr_in *)sp->ai_addr;
 		sIpAddr = ntohl(tmp->sin_addr.s_addr);
-		printf("send ip %s      %lu\n", inet_ntoa(tmp->sin_addr), sIpAddr);
+		//printf("send ip %s      %lu\n", inet_ntoa(tmp->sin_addr), sIpAddr);
         // ------------------------------------------------------------------------
     
         // Setup variables for statistics
@@ -254,11 +254,11 @@ int main(int argc, char **argv) {
         //       requester sits blocked in recvfrom below, but doesn't recv 
         // NOTE: this isn't happening anymore with the rate limit betw 1-1000 pkt/sec
     
-		printf("setup for recv loop\n");
+		//printf("setup for recv loop\n");
         struct sockaddr_storage emulAddr;
         bzero(&emulAddr, sizeof(struct sockaddr_storage));
         socklen_t len = sizeof(emulAddr);
-		printf("buffer\n");
+		//printf("buffer\n");
 		struct packet **buffer = malloc(window * (sizeof (void *)));
 		int buffIndex;
 		for (buffIndex = 0; buffIndex < window; buffIndex++) {
@@ -268,7 +268,7 @@ int main(int argc, char **argv) {
 		struct ip_packet *rpkt;
 		struct packet *drpkt;
         // Start a recv loop here to get all packets for the given part
-		printf("recv loop\n");
+		//printf("recv loop\n");
         for (;;) {
             void *msg = malloc(sizeof(struct ip_packet));
             bzero(msg, sizeof(struct ip_packet));
@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
             size_t bytesRecvd = recvfrom(sockfd, msg, sizeof(struct ip_packet), 0,
                 (struct sockaddr *)&emulAddr, &len);
             if (bytesRecvd == -1) perrorExit("Receive error");
-			printf("received");
+			//printf("received");
             // Deserialize the message into a packet
             rpkt = malloc(sizeof(struct ip_packet));
             bzero(rpkt, sizeof(struct ip_packet));
@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
 				if ( (drpkt->seq - start) >= window) {
 					int i;
 					for (i = 0; i < window; i++) {
-						printf("Write: %s\n",  buffer[i]->payload);
+						//printf("Write: %s\n",  buffer[i]->payload);
 						if (buffer[i] != NULL) {
 							size_t bytesWritten = fprintf(file, "%s", buffer[i]->payload);
 							if (bytesWritten != buffer[i]->len) {
@@ -358,7 +358,7 @@ int main(int argc, char **argv) {
 				dpkt->type = 'A';
 				dpkt->seq  = drpkt->seq;
 				dpkt->len  = 0;
-				printf("cpy pkt to ip pkt\n");
+				//printf("cpy pkt to ip pkt\n");
 				dpkt->payload[0] = '\0';
 				memcpy(pkt->payload, dpkt, sizeof(struct packet));
 				pkt->src = rIpAddr;
@@ -367,7 +367,7 @@ int main(int argc, char **argv) {
 				pkt->destPort = part->sender_port;
 				pkt->priority = HIGH_PRIORITY;
 				pkt->length = HEADER_SIZE;
-				printf("send a pkt\n");
+				//printf("send a pkt\n");
 				sendIpPacketTo(sockfd, pkt, esp->ai_addr);
 				free(rpkt);
     
@@ -391,7 +391,7 @@ int main(int argc, char **argv) {
 				int i;
 				for (i = 0; i < window; i++) {
 					if (buffer[i] != NULL) {
-						printf("Write: %s\n",  buffer[i]->payload);
+						//printf("Write: %s\n",  buffer[i]->payload);
 						size_t bytesWritten = fprintf(file, "%s", buffer[i]->payload);
 						if (bytesWritten != buffer[i]->len) {
 							fprintf(stderr,

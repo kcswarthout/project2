@@ -33,23 +33,23 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 	struct table_entry *nextEntry = NULL;
 	int i;
 	for (i = 0; i < size; i++) {
-		printf("dest %lu  %lu\n", table[i].dest, pkt->dest);
+		//printf("dest %lu  %lu\n", table[i].dest, pkt->dest);
 		if (table[i].dest == pkt->dest) {
-			printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
+			//printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
 			if (table[i].destPort == pkt->destPort) {
 				if (socket != NULL) {
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
 					socket->sin_addr.s_addr = htonl(table[i].nextHop);
 					socket->sin_port = htons(table[i].nextHopPort);
-					printf("socket is %lu  %u", ntohl(socket->sin_addr.s_addr), (unsigned long)ntohs(socket->sin_port));
+					//printf("socket is %lu  %u", ntohl(socket->sin_addr.s_addr), (unsigned long)ntohs(socket->sin_port));
 				}
 				printf("i = %d\n", i);
 				nextEntry = table + i;
 				break;
 			}
 		}
-		printf("no match\n\n");
+		//printf("no match\n\n");
 	}
 	
     return nextEntry;
@@ -86,7 +86,7 @@ int parseFile(const char *filename, unsigned int port) {
     size_t bytesRead = getline(&line, &lineLen, file);
     if (bytesRead == -1) perrorExit("Getline error");
     while (bytesRead != -1) { 
-		printf("read a line\n");
+		//printf("read a line\n");
         // Tokenize line
         int n = 0; // TODO: should this be 0 or -1?
         char *tokens[TOK_PER_LINE];
@@ -109,10 +109,10 @@ int parseFile(const char *filename, unsigned int port) {
 		printf("tok[empo] %s\n", tokens[EMUL_PORT]);*/
         // Only process this line if it is for the specified emulator
         if (strcmp(tokens[EMULATOR], hostname) == 0 && atoi(tokens[EMUL_PORT]) == port) {
-			printf("for this emul\n");
+			//printf("for this emul\n");
             struct raw_entry *entry = malloc(sizeof(struct raw_entry));
             bzero(entry, sizeof(struct raw_entry));
-			printf("malloced entry\n");
+			//printf("malloced entry\n");
 			// TODO: type conversions likr atol or strtoul instead of atoi
             entry->dest         = strdup(tokens[DESTINATION]);
             entry->destPort     = atoi(tokens[DEST_PORT]);
@@ -120,7 +120,7 @@ int parseFile(const char *filename, unsigned int port) {
             entry->nextHopPort  = atoi(tokens[NEXT_HOP_PORT]);
             entry->delay 		= atoi(tokens[DELAY]);
             entry->lossChance 	= atoi(tokens[LOSS_CHANCE]);
-			printf("set fields\n");
+			//printf("set fields\n");
             // Link it in to the list of raw_entries
             tmp->nextEntry = entry;
 			tmp = entry;

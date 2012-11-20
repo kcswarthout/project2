@@ -299,6 +299,7 @@ int main(int argc, char **argv) {
 						free(tmp);
 						
 					}
+					bzero(nextSock, sizeof(struct sockaddr_in));
 					currEntry = nextHop(currPkt, nextSock);
 					printf("delay %lu   %li   %li \n", currEntry->delay, (long)(currEntry->delay / 1000), (long)((currEntry->delay % 1000) * 1000000));
 					tv->tv_sec = (long)currEntry->delay / 1000;

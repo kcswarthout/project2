@@ -259,6 +259,7 @@ int main(int argc, char **argv) {
 				}
 				else {
 					printf("send packet\n");
+					printf("socket is %lu  %u", nextSock->sin_addr.s_addr, nextSock->sin_port);
 					sendIpPacketTo(sockfd, currPkt, (struct sockaddr*)nextSock);
 					free(currPkt);
 					currPkt = NULL;

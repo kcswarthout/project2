@@ -38,11 +38,11 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 			printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
 			if (table[i].destPort == pkt->destPort) {
 				if (socket != NULL) {
-					printf("socket is %lu  %u", table[i].nextHop, table[i].nextHopPort);
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
 					socket->sin_addr.s_addr = table[i].nextHop;
 					socket->sin_port = table[i].nextHopPort;
+					printf("socket is %lu  %u", socket->sin_addr.s_addr, socket->sin_port);
 				}
 				nextEntry = &table[i];
 				break;

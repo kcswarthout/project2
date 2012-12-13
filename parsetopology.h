@@ -1,9 +1,11 @@
+#include <sys/socket.h>
+#include <sys/types.h>
 
 struct neighbor_entry {
   unsigned long ip;
   unsigned int port;
   struct sockaddr_in *socket;
-}
+};
 
-struct neighbor_entry *readtopology(const char *filename, unsigned long ip, unsigned int port);
+int readtopology(const char *filename, struct sockaddr_in *local, struct neighbor_entry *neighbors);
 

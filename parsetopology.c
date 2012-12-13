@@ -4,16 +4,18 @@
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <netdb.h>
 
 #include "utilities.h"
 
 #define MAX_TOK_PER_LINE 20
 
-int readtopology(const char *filename, sockaddr_in *local, struct neighbor_entry *neighbors) {
+int readtopology(const char *filename, struct sockaddr_in *local, struct neighbor_entry *neighbors) {
   if (filename == NULL) ferrorExit("ReadTopology: invalid filename");
   if (local == NULL) ferrorExit("ReadTopology: invalid sockaddr");
-  char ipStr [INET_ADDRSTRLEN]
-  ipStr = inet_ntop(AF_INET, local, ipStr, INET_ADDRSTRLEN);
+  char ipStr [INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, local, ipStr, INET_ADDRSTRLEN);
   
   // Open the topology file
   FILE *file = fopen(filename, "r");
@@ -65,9 +67,9 @@ int readtopology(const char *filename, sockaddr_in *local, struct neighbor_entry
         fprintf(stderr, "ReadTopology getaddrinfo: %s\n", gai_strerror(errcode));
         exit(EXIT_FAILURE);
       }
-      neighbors[i]->socket = (struct sockaddr_in *)info->ai_addr;
-      neighbors[i]->ip = ntohl(neighbors[i]->socket->sin_addr.s_addr);
-      neighbors[i]->port = ntohs(neighbors[i]->socket->sin_port);
+      neighbors[i].socket = (struct sockaddr_in *)info->ai_addr;
+      neighbors[i].ip = ntohl(neighbors[i].socket->sin_addr.s_addr);
+      neighbors[i].port = ntohs(neighbors[i].socket->sin_port);
     }
   }
   

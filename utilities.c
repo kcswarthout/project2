@@ -60,7 +60,7 @@ void ferrorExit(const char *msg) {
 }
 
 unsigned long nameToAddr(char *name) {
-	struct addrinfo hints;
+    struct addrinfo hints;
     bzero(&hints, sizeof(struct addrinfo));
     hints.ai_family   = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;

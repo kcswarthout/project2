@@ -1,23 +1,18 @@
 CC=gcc
 CFLAGS=-Wall -std=gnu99 -ggdb3
 
-all: requester sender emulator
+all: trace emulator
 
-requester: requester.c tracker.c utilities.c packet.c
-	@echo "Building requester..."; \
-	$(CC) $(CFLAGS) -o $@ $^;      \
-	echo "  [complete]"
-
-sender: sender.c utilities.c packet.c
-	@echo "Building sender..."; \
+trace: trace.c utilities.c packet.c
+	@echo "Building trace..."; \
 	$(CC) $(CFLAGS) -o $@ $^;   \
 	echo "  [complete]"
 
-emulator: emulator.c utilities.c packet.c forwardtable.c log.c
+emulator: emulator.c utilities.c packet.c forwardtable.c log.c parsetopology.c
 	@echo "Building emulator..."; \
 	$(CC) $(CFLAGS) -o $@ $^;   \
 	echo "  [complete]"
 	
 clean:
-	rm -rf *.o requester sender emulator
+	rm -rf *.o trace emulator
 

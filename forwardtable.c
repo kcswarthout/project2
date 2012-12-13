@@ -16,23 +16,23 @@
 #include <netdb.h>
 
 #include "utilities.h"
-#include "forwardtable.h"
 #include "packet.h"
 
 #define TRACKER "tracker.txt"
 #define TOK_PER_LINE 8
+#define MAX_NUM_NODES 20
 
 enum token { EMULATOR, EMUL_PORT, DESTINATION, DEST_PORT, NEXT_HOP, NEXT_HOP_PORT, DELAY, LOSS_CHANCE };
 
-struct table_entry *table = NULL;
-int size = 0;
+// this is the forward table
+struct table_entry *table;
 
-struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
+
+int nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 	if (table == NULL) printf("No table entries\n");
 	if (pkt == NULL) perrorExit("nextHop function: pkt null");
-	struct table_entry *nextEntry = NULL;
 	int i;
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < MAX_NUM_NODES; i++) {
 		//printf("dest %lu  %lu\n", table[i].dest, pkt->dest);
 		if (table[i].dest == pkt->dest) {
 			//printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
@@ -45,21 +45,19 @@ struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 					//printf("socket is %lu  %u", ntohl(socket->sin_addr.s_addr), (unsigned long)ntohs(socket->sin_port));
 				}
 				printf("i = %d\n", i);
-				nextEntry = table + i;
-				break;
+				return 1;
 			}
 		}
 		//printf("no match\n\n");
 	}
-	
-    return nextEntry;
+  return 0;
 }
 
-int shouldForward(struct ip_packet *pkt) {
-	struct table_entry *p = nextHop(pkt, NULL);
-	if (p == NULL) return 0;
-	return 1;
-} 
+
+
+
+
+
 
 // ----------------------------------------------------------------------------
 // Parse the forwarding table file.
@@ -67,13 +65,14 @@ int shouldForward(struct ip_packet *pkt) {
 //   a linked list of file_entry structures that contain the location 
 //   and sequence information from the tracker for the specified file.
 // ----------------------------------------------------------------------------
+/*
 int parseFile(const char *filename, unsigned int port) {
     if (filename == NULL) ferrorExit("ParseTracker: invalid filename");
-	char *hostname;
+    char *hostname;
 	
     // Setup the rawTable
     struct raw_entry *rawTable = malloc(sizeof(struct raw_entry));
-	struct raw_entry *tmp = rawTable;
+    struct raw_entry *tmp = rawTable;
 	
     // Open the forward table file
     FILE *file = fopen(filename, "r");
@@ -100,31 +99,31 @@ int parseFile(const char *filename, unsigned int port) {
 		hostname = malloc(len + 1);
 		hostname[len] = '\0';
 		gethostname(hostname, len);
-		/*printf("tokenized a line\n");
-		printf("EMUL %d\n", EMULATOR);
-		printf("EMULPORT %d\n", EMUL_PORT);
-		printf("hostname %s\n", hostname);
-		printf("port %d\n", port);
-		printf("tok[em] %s\n", tokens[EMULATOR]);
-		printf("tok[empo] %s\n", tokens[EMUL_PORT]);*/
+		//printf("tokenized a line\n");
+		//printf("EMUL %d\n", EMULATOR);
+		//printf("EMULPORT %d\n", EMUL_PORT);
+		//printf("hostname %s\n", hostname);
+		//printf("port %d\n", port);
+		//printf("tok[em] %s\n", tokens[EMULATOR]);
+		//printf("tok[empo] %s\n", tokens[EMUL_PORT]);
         // Only process this line if it is for the specified emulator
         if (strcmp(tokens[EMULATOR], hostname) == 0 && atoi(tokens[EMUL_PORT]) == port) {
-			//printf("for this emul\n");
+            //printf("for this emul\n");
             struct raw_entry *entry = malloc(sizeof(struct raw_entry));
             bzero(entry, sizeof(struct raw_entry));
-			//printf("malloced entry\n");
-			// TODO: type conversions likr atol or strtoul instead of atoi
+            //printf("malloced entry\n");
+            // TODO: type conversions likr atol or strtoul instead of atoi
             entry->dest         = strdup(tokens[DESTINATION]);
             entry->destPort     = atoi(tokens[DEST_PORT]);
-			entry->nextHop      = strdup(tokens[NEXT_HOP]);
+            entry->nextHop      = strdup(tokens[NEXT_HOP]);
             entry->nextHopPort  = atoi(tokens[NEXT_HOP_PORT]);
-            entry->delay 		= atoi(tokens[DELAY]);
-            entry->lossChance 	= atoi(tokens[LOSS_CHANCE]);
-			//printf("set fields\n");
+            entry->delay 		    = 0;
+            entry->lossChance 	= 0;
+            //printf("set fields\n");
             // Link it in to the list of raw_entries
             tmp->nextEntry = entry;
-			tmp = entry;
-			++size;
+            tmp = entry;
+            ++size;
         }
 		
         // Get the next forward table line
@@ -151,15 +150,14 @@ int parseFile(const char *filename, unsigned int port) {
 		table[i].destPort = tmp->destPort;
 		table[i].nextHop = nameToAddr(tmp->nextHop);
 		table[i].nextHopPort = tmp->nextHopPort;
-		table[i].delay = tmp->delay;
-		table[i].lossChance = tmp->lossChance;
 		printf("dest: %s %u     nexthop: %s %u   delay: %u  loss: %d\n", 
-				tmp->dest, tmp->destPort, tmp->nextHop, tmp->nextHopPort, tmp->delay, tmp->lossChance);
+    tmp->dest, tmp->destPort, tmp->nextHop, tmp->nextHopPort, tmp->delay, tmp->lossChance);
 		rawTable = tmp;
 		tmp = tmp->nextEntry;
 		free(rawTable);
 	}
     return 1; // success
 }
+*/
 
 

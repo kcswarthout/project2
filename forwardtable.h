@@ -9,8 +9,6 @@ struct table_entry {
 	unsigned int destPort;
 	unsigned long nextHop;
 	unsigned int nextHopPort;
-	unsigned long delay;
-	int lossChance;
 } __attribute__((packed));
 
 struct raw_entry {
@@ -28,19 +26,18 @@ struct end_packet_list {
 	struct end_packet_list *nextPkt;
 };
 
+#define TABLE_ENTRY_SIZE sizeof(struct table_entry)
+
 // ----------------------------------------------------------------------------
 // Parse the forwarding table file.
 //   Builds a file_info struct for the specified file consisting of 
 //   a linked list of file_part structures that contain the location 
 //   and sequence information from the tracker for the specified file.
 // ----------------------------------------------------------------------------
-int parseFile(const char *filename, unsigned int port);
+int createRoutes();
 
 // ----------------------------------------------------------------------------
-struct table_entry *nextHop(struct ip_packet *pkt, struct sockaddr_in *socket);
-
-// ----------------------------------------------------------------------------
-int shouldForward(struct ip_packet *pkt);
+int nextHop(struct ip_packet *pkt, struct sockaddr_in *socket);
 
 // ----------------------------------------------------------------------------
 

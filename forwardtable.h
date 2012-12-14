@@ -28,6 +28,8 @@ struct end_packet_list {
 
 #define TABLE_ENTRY_SIZE sizeof(struct table_entry)
 
+int initTable(const char *filename, struct sockaddr_in *local);
+
 // ----------------------------------------------------------------------------
 // Parse the forwarding table file.
 //   Builds a file_info struct for the specified file consisting of 

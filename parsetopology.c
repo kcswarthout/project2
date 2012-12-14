@@ -11,12 +11,12 @@
 
 #define MAX_TOK_PER_LINE 20
 
-int readtopology(const char *filename, struct sockaddr_in *local, struct neighbor_entry *neighbors) {
+int readtopology(const char *filename, struct sockaddr_in *local, struct neighbor_entry **neighbors) {
   if (filename == NULL) ferrorExit("ReadTopology: invalid filename");
   if (local == NULL) ferrorExit("ReadTopology: invalid sockaddr");
   char ipStr [INET_ADDRSTRLEN];
   inet_ntop(AF_INET, local, ipStr, INET_ADDRSTRLEN);
-  
+  puts(ipStr);
   // Open the topology file
   FILE *file = fopen(filename, "r");
   if (file == NULL) perrorExit("ReadTopology open error");
@@ -33,8 +33,12 @@ int readtopology(const char *filename, struct sockaddr_in *local, struct neighbo
     //printf("read a line\n");
     // Tokenize line
     tok = strtok(line, ",");
+    puts(tok);
     // Only process this line if it is for the specified node
-    if (strcmp(tok, ipStr) == 0) continue;
+    if (strcmp(tok, ipStr) == 0) {
+      puts("\n Found");
+      continue;
+    }
     //printf("for this emul\n");
     
     free(line);
@@ -52,7 +56,7 @@ int readtopology(const char *filename, struct sockaddr_in *local, struct neighbo
       tok  = strtok(NULL, " ");
       n++;
     }
-    neighbors = malloc(n * (sizeof(struct neighbor_entry)));
+    *neighbors = malloc(n * (sizeof(struct neighbor_entry)));
     int i;
     //printf("set fields\n");
     struct addrinfo hints;
@@ -67,9 +71,9 @@ int readtopology(const char *filename, struct sockaddr_in *local, struct neighbo
         fprintf(stderr, "ReadTopology getaddrinfo: %s\n", gai_strerror(errcode));
         exit(EXIT_FAILURE);
       }
-      neighbors[i].socket = (struct sockaddr_in *)info->ai_addr;
-      neighbors[i].ip = ntohl(neighbors[i].socket->sin_addr.s_addr);
-      neighbors[i].port = ntohs(neighbors[i].socket->sin_port);
+      (*neighbors)[i].socket = (struct sockaddr_in *)info->ai_addr;
+      (*neighbors)[i].ip = ntohl(neighbors[i]->socket->sin_addr.s_addr);
+      (*neighbors)[i].port = ntohs(neighbors[i]->socket->sin_port);
     }
   }
   

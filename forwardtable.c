@@ -17,6 +17,7 @@
 
 #include "utilities.h"
 #include "packet.h"
+#include "parsetopology.h"
 
 #define TRACKER "tracker.txt"
 #define TOK_PER_LINE 8
@@ -25,7 +26,10 @@
 enum token { EMULATOR, EMUL_PORT, DESTINATION, DEST_PORT, NEXT_HOP, NEXT_HOP_PORT, DELAY, LOSS_CHANCE };
 
 // this is the forward table
-struct table_entry *table;
+struct table_entry **table;
+int tabSize;
+struct neighbor_entry *neighbors;
+int neiNum;
 
 
 int nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
@@ -34,14 +38,14 @@ int nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 	int i;
 	for (i = 0; i < MAX_NUM_NODES; i++) {
 		//printf("dest %lu  %lu\n", table[i].dest, pkt->dest);
-		if (table[i].dest == pkt->dest) {
+		if (table[i]->dest == pkt->dest) {
 			//printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
-			if (table[i].destPort == pkt->destPort) {
+			if (table[i]->destPort == pkt->destPort) {
 				if (socket != NULL) {
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
-					socket->sin_addr.s_addr = htonl(table[i].nextHop);
-					socket->sin_port = htons(table[i].nextHopPort);
+					socket->sin_addr.s_addr = htonl(table[i]->nextHop);
+					socket->sin_port = htons(table[i]->nextHopPort);
 					//printf("socket is %lu  %u", ntohl(socket->sin_addr.s_addr), (unsigned long)ntohs(socket->sin_port));
 				}
 				printf("i = %d\n", i);
@@ -55,6 +59,21 @@ int nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 
 
 
+int createRoutes() {
+  return 1;
+}
+
+
+int initTable(const char *filename, struct sockaddr_in *local) {
+  neiNum = readtopology(filename, local, &neighbors);
+  int i;
+  printf("Neighbors\n");
+  for (i = 0; i < neiNum; i++) {
+    printf("IP: %lu    Port: %u", neighbors[i].ip, neighbors[i].port);
+  }
+  //fflush(stdout);
+  return createRoutes();
+}
 
 
 

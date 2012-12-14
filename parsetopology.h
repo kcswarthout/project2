@@ -7,5 +7,5 @@ struct neighbor_entry {
   struct sockaddr_in *socket;
 };
 
-int readtopology(const char *filename, struct sockaddr_in *local, struct neighbor_entry *neighbors);
+int readtopology(const char *filename, struct sockaddr_in *local, struct neighbor_entry **neighbors);
 

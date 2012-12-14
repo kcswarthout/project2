@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     }
 
     char *portStr    = NULL;
-    char *filename   = NULL;
+    const char *filename   = NULL;
 
     int cmd;
     while ((cmd = getopt(argc, argv, "p:f:")) != -1) {
@@ -64,8 +64,8 @@ int main(int argc, char **argv) {
         ferrorExit("Invalid emul port");
     puts("");
 
-	srand(time(NULL));
-	initLog("log_file.txt");
+    srand(time(NULL));
+    initLog("log_file.txt");
 	
     // ------------------------------------------------------------------------
     // Setup emul address info 
@@ -109,7 +109,9 @@ int main(int argc, char **argv) {
 	struct sockaddr_in *tmp = (struct sockaddr_in *)sp->ai_addr;
 	unsigned long eIpAddr = tmp->sin_addr.s_addr;
 	
+  initTable(filename, tmp);
 
+exit(0);
   // ------------------------------------------------------------------------
 	// The Big Loop of DOOM
 
@@ -207,7 +209,7 @@ int main(int argc, char **argv) {
 			// refresh forward table
 			printf("retval == 0\n");
 			
-      // createRoutes();
+      createRoutes();
       
       int delay = minTime + (rand() % (maxTime - minTime));
       tv->tv_sec = (long)delay / 1000;

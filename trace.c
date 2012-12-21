@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     close(ssockfd);
 	
     tmp = (struct sockaddr_in *)sp->ai_addr;
-    unsigned long sIpAddr = ntohl(tmp->sin_addr.s_addr);
+    //unsigned long sIpAddr = ntohl(tmp->sin_addr.s_addr);
     //printf("emul ip %s      %lu\n", inet_ntoa(tmp->sin_addr), eIpAddr);
     
     
@@ -169,9 +169,14 @@ int main(int argc, char **argv) {
     
     struct ip_packet *rpkt = malloc(sizeof(struct ip_packet));
     void *msg = malloc(sizeof(struct ip_packet));
-    
+    char destS[20];
+    char srcS[20];
     while (dpkt->len < 25) {
-      printf("send trace pkt - TTL=%ul\n", dpkt->len);
+      if (debug) {
+        ipULtoStr(pkt->src, srcS);
+        ipULtoStr(pkt->dest, destS);
+        printf("Trace pkt sent - TTL=%lu   Src=%s:%u   Dest=%s:%u\n", dpkt->len, srcS, pkt->srcPort, destS, pkt->destPort);
+      }
       sendIpPacketTo(sockfd, pkt, sp->ai_addr);
       
       bzero(msg, sizeof(struct ip_packet));
@@ -181,8 +186,17 @@ int main(int argc, char **argv) {
 				fprintf(stderr, "Failed/incomplete receive: ignoring\n");
 				continue;
 			}
+      
       deserializeIpPacket(msg, rpkt);
-      printf("%s:%u", "IP.IP.IP.IP", rpkt->srcPort);
+      ipULtoStr(rpkt->src, srcS);
+      if (debug) {
+        ipULtoStr(rpkt->dest, destS);
+        printf("Trace pkt recv - TTL=0   Src=%s:%u   Dest=%s:%u\n", srcS, rpkt->srcPort, destS, rpkt->destPort);
+      }
+      printf("%s:%u", srcS, rpkt->srcPort);
+      if (rpkt->srcPort == destPort && rpkt->src == nameToAddr(dHostName)) {
+        break;
+      }
       dpkt->len++;
     }
     

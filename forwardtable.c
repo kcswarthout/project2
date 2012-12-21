@@ -17,7 +17,6 @@
 
 #include "utilities.h"
 #include "packet.h"
-#include "parsetopology.h"
 
 #define TRACKER "tracker.txt"
 #define TOK_PER_LINE 8
@@ -26,26 +25,127 @@
 enum token { EMULATOR, EMUL_PORT, DESTINATION, DEST_PORT, NEXT_HOP, NEXT_HOP_PORT, DELAY, LOSS_CHANCE };
 
 // this is the forward table
-struct table_entry **table;
-int tabSize;
-struct neighbor_entry *neighbors;
+struct table_entry *table;
+int tabSize = 0;
+struct neighbor_entry *allNeighbors;
+int allNeiNum;
+struct neighbor_listing *neighbors;
 int neiNum;
+struct lsp_entry *lspList;
+int lspSize = 0;
+unsigned long lspSeq = 0;
 
+int getIndexLSP(unsigned long ip, unsigned int port) {
+  int i;
+  for (i = 0; i < lspSize; i++) {
+    if(lspList[i].ip == ip && lspList[i].port == port) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void updateNeighbors() {
+  int i;
+  neiNum = 0;
+  free(neighbors);
+  neighbors = malloc(20 * sizeof(struct neighbor_listing));
+  for (i = 0; i < allNeiNum; i++) {
+    int x = getIndexLSP(allNeighbors[i].ip, allNeighbors[i].port);
+    if (x == -1) {
+      allNeighbors[i].isAlive = 0;
+      continue;
+    }
+    else if (lspList[x].time - getTimeMS() > 1500) {
+      allNeighbors[i].isAlive = 0;
+      continue;
+    }
+    else {
+      allNeighbors[i].isAlive = 1;
+      neighbors[neiNum].ip = allNeighbors[i].ip;
+      neighbors[neiNum].port =allNeighbors[i].port;
+      neiNum++;
+    }
+  }
+}
+
+int updateLSP(struct ip_packet *lsp) {
+  int i = getIndexLSP(lsp->src, lsp->srcPort);
+  struct packet *dpkt = (struct packet *)lsp->payload;
+  if (i == -1) {
+    if (lspSize >= 20) {
+      return 0;
+    }
+    lspList[lspSize].ip = lsp->src;
+    lspList[lspSize].port = lsp->srcPort;
+    lspList[lspSize].time = getTimeMS();
+    lspList[i].seq = dpkt->seq;
+    lspList[lspSize].list = malloc(20 * sizeof(struct neighbor_listing));
+    bzero(lspList[lspSize].list, 20 * sizeof(struct neighbor_listing));
+    memcpy(lspList[lspSize].list, dpkt->payload, lsp->length - HEADER_SIZE);
+    lspSize++;
+    return 1;
+  }
+  else {
+    
+    if (dpkt->seq > lspList[i].seq) {
+      lspList[i].ip = lsp->src;
+      lspList[i].port = lsp->srcPort;
+      lspList[i].time = getTimeMS();
+      lspList[i].seq = dpkt->seq;
+      bzero(lspList[i].list, 20 * sizeof(struct neighbor_listing));
+      memcpy(lspList[i].list, dpkt->payload, lsp->length - HEADER_SIZE);
+      return 1;
+    }
+    return 0;
+  }
+}
+
+struct packet *createNeighborPkt() {
+  struct packet *dpkt = malloc(sizeof(struct packet));
+  unsigned char *buffer;
+  int size = neighborsToPayload(neighbors, &buffer, neiNum);
+  memcpy(dpkt->payload, buffer, size);
+  dpkt->len = size;
+  //dpkt->type = 's';
+  return dpkt;
+}
+
+void floodLSP(int sockfd, struct sockaddr_in *local, struct ip_packet *pkt) {
+  int i;
+  if (pkt == NULL) {
+    pkt = malloc(sizeof(struct ip_packet));
+    bzero(pkt, sizeof(struct ip_packet));
+    struct packet *dpkt = createNeighborPkt();
+    pkt->length = HEADER_SIZE + dpkt->len;  
+    dpkt->type = 'S';
+    dpkt->seq  = lspSeq;
+    dpkt->len  = (unsigned long) 20;
+    memcpy(pkt->payload, dpkt, sizeof(struct packet));
+    pkt->src = local->sin_addr.s_addr;
+    pkt->srcPort = local->sin_port;
+    pkt->priority = 0;
+    updateLSP(pkt);
+  }
+  for (i = 0; i < allNeiNum; i++) {
+    sendIpPacketTo(sockfd, pkt, (struct sockaddr *) allNeighbors[allNeiNum].socket);
+  }
+}
 
 int nextHop(struct ip_packet *pkt, struct sockaddr_in *socket) {
 	if (table == NULL) printf("No table entries\n");
 	if (pkt == NULL) perrorExit("nextHop function: pkt null");
 	int i;
-	for (i = 0; i < MAX_NUM_NODES; i++) {
+	for (i = 0; i < tabSize; i++) {
 		//printf("dest %lu  %lu\n", table[i].dest, pkt->dest);
-		if (table[i]->dest == pkt->dest) {
+		if (table[i].dest == pkt->dest) {
 			//printf("destport %u  %u\n", table[i].destPort, pkt->destPort);
-			if (table[i]->destPort == pkt->destPort) {
+			if (table[i].destPort == pkt->destPort) {
 				if (socket != NULL) {
 					bzero(socket, sizeof(struct sockaddr_in));
 					socket->sin_family = AF_INET;
-					socket->sin_addr.s_addr = htonl(table[i]->nextHop);
-					socket->sin_port = htons(table[i]->nextHopPort);
+					socket->sin_addr.s_addr = htonl(table[i].nextHop);
+					socket->sin_port = htons(table[i].nextHopPort);
 					//printf("socket is %lu  %u", ntohl(socket->sin_addr.s_addr), (unsigned long)ntohs(socket->sin_port));
 				}
 				printf("i = %d\n", i);
@@ -65,17 +165,22 @@ int createRoutes() {
 
 
 int initTable(const char *filename, struct sockaddr_in *local) {
-  neiNum = readtopology(filename, local, &neighbors);
+  table = malloc(20 * sizeof(struct table_entry));
+  lspList = malloc(20 * sizeof(struct lsp_entry));
+  allNeiNum = readtopology(filename, local, &allNeighbors);
   int i;
-  printf("%d Neighbors\n", neiNum);
+  printf("%d Neighbors\n", allNeiNum);
   char str[20];
-  for (i = 0; i < neiNum; i++) {
-    ipULtoStr(neighbors[i].ip, str);
-    printf("IP: %s    Port: %u\n", str, neighbors[i].port);
+  for (i = 0; i < allNeiNum; i++) {
+    ipULtoStr(allNeighbors[i].ip, str);
+    printf("IP: %s    Port: %u\n", str, allNeighbors[i].port);
   }
   //fflush(stdout);
-  return createRoutes();
+  
+  return 1;
 }
+
+
 
 
 

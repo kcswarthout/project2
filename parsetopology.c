@@ -112,3 +112,19 @@ int readtopology(const char *filename, struct sockaddr_in *local, struct neighbo
   
   return n;
 }
+
+int neighborsToPayload(struct neighbor_listing *neighbors, unsigned char **bytes, int size) {
+  size_t newSize = size * sizeof(struct neighbor_listing);
+  *bytes = malloc(newSize);
+  bzero(*bytes, newSize);
+  memcpy(*bytes, neighbors, newSize);
+  return (int) newSize;
+}
+
+int payloadToNeighbors(struct neighbor_listing **neighbors, unsigned char *bytes, int size) {
+  int newSize = size / sizeof(struct neighbor_listing);
+  *neighbors = malloc((size_t) size);
+  bzero(*neighbors, (size_t) size);
+  memcpy(*neighbors, bytes, (size_t) size);
+  return newSize;
+}

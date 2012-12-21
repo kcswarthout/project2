@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 
     // Convert program args to values
     int emulPort  = atoi(portStr);
-    int maxTime = 2500;
+    int maxTime = 1500;
     int minTime = 500;
 
     // Validate the argument values
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
 	//printf("eIpAddr: %lu\n", eIpAddr);
   initTable(filename, tmp);
 
-exit(0);
+  exit(0);
   // ------------------------------------------------------------------------
 	// The Big Loop of DOOM
 
@@ -123,10 +123,11 @@ exit(0);
 	fd_set fds;
 	
   struct timespec *tv = malloc(sizeof(struct timespec));
-	tv->tv_sec = (long) 1000;
+	tv->tv_sec = (long) 0;
 	tv->tv_nsec = 0;
   int retval = 0;
 	int numRecv = 0;
+  int routesMade = 0;
 	unsigned long long start;
   struct packet *dpkt;
   struct ip_packet *pkt = malloc(sizeof(struct ip_packet));
@@ -140,7 +141,7 @@ exit(0);
 		// ------------------------------------------------------------------------
 		// receiving half
         
-		if (retval > 0) {
+		if (retval > 0 /*&& routesMade == 1*/) {
 			// Receive and forward packet
 			printf("retval > 0\n");
 			bzero(msg, sizeof(struct ip_packet));
@@ -175,8 +176,19 @@ exit(0);
         }
       }
       else if (dpkt->type == 'S') {
-        
-        shouldForward = nextHop(pkt, nextSock);
+        /*if ((pkt->dest == eIpAddr && pkt->destPort == emulPort) || dpkt->len == 0) {
+          dpkt = createNeighborPkt();
+          bzero(pkt, sizeof(struct ip_packet));
+          pkt->length = dpkt->len + HEADER_SIZE;
+          pkt->priority = 0;
+          memcpy(pkt->payload, dpkt, sizeof(struct packet));
+          
+        }*/
+        if (updateLSP(pkt)) {
+          floodLSP(sockfd, tmp, pkt);
+        }
+        shouldForward = 0;
+        routesMade = 0;
       }
       else {
         shouldForward = nextHop(pkt, nextSock);
@@ -207,12 +219,14 @@ exit(0);
 			tv->tv_sec = sec;
 			tv->tv_nsec = nsec;
 		}
-		else if (retval == 0) {
+		if (retval == 0 || routesMade == 0) {
 			// ------------------------------------------------------------------------
 			// refresh forward table
 			printf("retval == 0\n");
-			
-      createRoutes();
+			if (retval == 0) {
+        floodLSP(sockfd, tmp, NULL);
+      }
+      routesMade = createRoutes();
       
       int delay = minTime + (rand() % (maxTime - minTime));
       tv->tv_sec = (long)delay / 1000;

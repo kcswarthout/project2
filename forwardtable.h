@@ -1,14 +1,24 @@
 #include <netinet/in.h>
 #include "packet.h"
+#include "parsetopology.h"
 
 #ifndef _FORWARDTABLE_H_
 #define _FORWARDTABLE_H_
+
+struct lsp_entry {
+  unsigned long ip;
+  unsigned int port;
+  struct neighbor_listing *list;
+  unsigned long long time;
+  unsigned long seq;
+} __attribute__((packed));
 
 struct table_entry {
 	unsigned long dest;
 	unsigned int destPort;
 	unsigned long nextHop;
 	unsigned int nextHopPort;
+  int cost;
 } __attribute__((packed));
 
 struct raw_entry {
@@ -43,5 +53,14 @@ int nextHop(struct ip_packet *pkt, struct sockaddr_in *socket);
 
 // ----------------------------------------------------------------------------
 
+struct packet *createNeighborPkt();
+
+void updateNeighbors();
+
+int getIndexLSP(unsigned long ip, unsigned int port);
+
+int updateLSP(struct ip_packet *lsp);
+
+void floodLSP(int sockfd, struct sockaddr_in *local, struct ip_packet *pkt);
 
 #endif

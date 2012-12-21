@@ -74,10 +74,13 @@ int main(int argc, char **argv) {
     ehints.ai_family   = AF_INET;
     ehints.ai_socktype = SOCK_DGRAM;
     ehints.ai_flags    = AI_PASSIVE;
-
+    
+    char localhost[80];
+    gethostname(localhost, sizeof(localhost));
+    
     // Get the emul's address info
     struct addrinfo *emulinfo;
-    int errcode = getaddrinfo(NULL, portStr, &ehints, &emulinfo);
+    int errcode = getaddrinfo(localhost, portStr, &ehints, &emulinfo);
     if (errcode != 0) {
         fprintf(stderr, "emul getaddrinfo: %s\n", gai_strerror(errcode));
         exit(EXIT_FAILURE);
@@ -108,7 +111,7 @@ int main(int argc, char **argv) {
 
 	struct sockaddr_in *tmp = (struct sockaddr_in *)sp->ai_addr;
 	unsigned long eIpAddr = tmp->sin_addr.s_addr;
-	
+	//printf("eIpAddr: %lu\n", eIpAddr);
   initTable(filename, tmp);
 
 exit(0);

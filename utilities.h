@@ -46,5 +46,7 @@ unsigned long nameToAddr(char *name);
 
 char* addrToName(unsigned long addr);
 
+void ipULtoStr(unsigned long ip, char *buffer);
+
 #endif
 

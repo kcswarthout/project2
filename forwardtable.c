@@ -67,9 +67,11 @@ int createRoutes() {
 int initTable(const char *filename, struct sockaddr_in *local) {
   neiNum = readtopology(filename, local, &neighbors);
   int i;
-  printf("Neighbors\n");
+  printf("%d Neighbors\n", neiNum);
+  char str[20];
   for (i = 0; i < neiNum; i++) {
-    printf("IP: %lu    Port: %u", neighbors[i].ip, neighbors[i].port);
+    ipULtoStr(neighbors[i].ip, str);
+    printf("IP: %s    Port: %u\n", str, neighbors[i].port);
   }
   //fflush(stdout);
   return createRoutes();

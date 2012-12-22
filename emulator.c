@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 			if (retval == 0) {
         floodLSP(sockfd, tmp, NULL);
       }
-      routesMade = createRoutes();
+      routesMade = createRoutes(tmp);
       
       int delay = minTime + (rand() % (maxTime - minTime));
       tv->tv_sec = (long)delay / 1000;

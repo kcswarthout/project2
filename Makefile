@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -std=gnu99 -ggdb3
 
-all: emulator
+all: trace emulator
 
 trace: trace.c utilities.c packet.c
 	@echo "Building trace..."; \

@@ -9,6 +9,7 @@ struct lsp_entry {
   unsigned long ip;
   unsigned int port;
   struct neighbor_listing *list;
+  int size;
   unsigned long long time;
   unsigned long seq;
 } __attribute__((packed));
@@ -46,7 +47,7 @@ int initTable(const char *filename, struct sockaddr_in *local);
 //   a linked list of file_part structures that contain the location 
 //   and sequence information from the tracker for the specified file.
 // ----------------------------------------------------------------------------
-int createRoutes();
+int createRoutes(struct sockaddr_in *local);
 
 // ----------------------------------------------------------------------------
 int nextHop(struct ip_packet *pkt, struct sockaddr_in *socket);
@@ -62,5 +63,7 @@ int getIndexLSP(unsigned long ip, unsigned int port);
 int updateLSP(struct ip_packet *lsp);
 
 void floodLSP(int sockfd, struct sockaddr_in *local, struct ip_packet *pkt);
+
+int tableIndex(unsigned long ip, unsigned int port);
 
 #endif
